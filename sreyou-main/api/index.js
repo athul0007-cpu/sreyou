@@ -171,7 +171,7 @@ app.post('/api/reviews', async (req, res) => {
       servicer_id: String(servicerId),
       rating: parseInt(rating, 10),
       comment
-    }]).select().single();
+    }]).select('id, jobId:job_id, servicerId:servicer_id, rating, comment, created_at').single();
     if (error) throw error;
     res.status(201).json(data);
   } catch (err) {
@@ -182,7 +182,9 @@ app.post('/api/reviews', async (req, res) => {
 // Get reviews for a servicer
 app.get('/api/users/:id/reviews', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('reviews').select('*').eq('servicer_id', String(req.params.id));
+    const { data, error } = await supabase.from('reviews')
+      .select('id, jobId:job_id, servicerId:servicer_id, rating, comment, created_at')
+      .eq('servicer_id', String(req.params.id));
     if (error) throw error;
     res.json(data);
   } catch (err) {
@@ -200,7 +202,7 @@ app.post('/api/messages/:jobId', async (req, res) => {
       sender_id: String(senderId),
       sender_name: senderName,
       text
-    }]).select().single();
+    }]).select('id, jobId:job_id, senderId:sender_id, senderName:sender_name, text, created_at').single();
     if (error) throw error;
     res.status(201).json(data);
   } catch (err) {
@@ -211,7 +213,9 @@ app.post('/api/messages/:jobId', async (req, res) => {
 // Get messages for a job
 app.get('/api/messages/:jobId', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('messages').select('*').eq('job_id', req.params.jobId);
+    const { data, error } = await supabase.from('messages')
+      .select('id, jobId:job_id, senderId:sender_id, senderName:sender_name, text, created_at')
+      .eq('job_id', req.params.jobId);
     if (error) throw error;
     res.json(data);
   } catch (err) {
