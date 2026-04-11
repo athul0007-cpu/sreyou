@@ -59,6 +59,9 @@ app.post('/api/jobs', (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
+  // Generate mock distance between 0.5km and 12.0km
+  const distance_km = parseFloat((Math.random() * 11.5 + 0.5).toFixed(1));
+
   const job = {
     id: lastJobId++,
     customer_id: String(customer_id),
@@ -68,6 +71,7 @@ app.post('/api/jobs', (req, res) => {
     status: 'pending',
     servicer_id: null,
     servicer_name: null,
+    distance_km,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };

@@ -74,7 +74,14 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
             {availableJobs.map(job => (
               <div key={job.id} className="glass-panel animate-up" style={{ padding: '1.5rem', border: '1px solid var(--glass-border)' }}>
-                <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{job.category}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{job.category}</h3>
+                  {job.distance_km && (
+                    <span style={{ background: 'rgba(30,109,94,0.1)', color: 'var(--primary)', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      📍 {job.distance_km} km away
+                    </span>
+                  )}
+                </div>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Requested by {job.customer_name}</p>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{job.description || 'No description provided.'}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
