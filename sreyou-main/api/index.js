@@ -53,7 +53,7 @@ app.get('/api/users/:id', async (req, res) => {
 
 // Broadcast (create) a job
 app.post('/api/jobs', async (req, res) => {
-  const { customer_id, customer_name, category, description } = req.body;
+  const { customer_id, customer_name, category, description, lat, lng } = req.body;
   if (!customer_id || !category) return res.status(400).json({ error: 'Missing required fields' });
 
   const distance_km = parseFloat((Math.random() * 11.5 + 0.5).toFixed(1));
@@ -65,7 +65,9 @@ app.post('/api/jobs', async (req, res) => {
       category,
       description: description || '',
       status: 'pending',
-      distance_km
+      distance_km,
+      lat: lat || null,
+      lng: lng || null
     }]).select().single();
     
     if (error) throw error;

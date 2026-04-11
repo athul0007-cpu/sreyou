@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { API_URL } from '../config';
 import JobChat from './JobChat';
 
@@ -7,6 +7,11 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
   const [myJobs, setMyJobs] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [activeChatJob, setActiveChatJob] = useState(null);
+  const [showMap, setShowMap] = useState(true);
+  
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markersGroup = useRef(null);
 
   const fetchJobs = async () => {
     try {
@@ -32,8 +37,67 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
 
   useEffect(() => {
     fetchJobs();
-    const interval = setInterval(fetchJobs, 3000); // Polling for new jobs
+    const interval = setInterval(fetchJobs, 3000); 
     return () => clearInterval(interval);
+  }, []);
+
+  // Map Lifecycle
+  useEffect(() => {
+    if (!showMap || !mapRef.current || mapInstance.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: [20, 0], // Default global zoom, will auto-fit later
+      zoom: 2,
+      zoomControl: true,
+      attributionControl: false
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20
+    }).addTo(map);
+
+    markersGroup.current = L.featureGroup().addTo(map);
+    mapInstance.current = map;
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, [showMap]);
+
+  // Update markers when availableJobs change
+  useEffect(() => {
+    if (!mapInstance.current || !markersGroup.current) return;
+
+    markersGroup.current.clearLayers();
+    const jobsWithCoords = availableJobs.filter(j => j.lat && j.lng);
+
+    jobsWithCoords.forEach(job => {
+      const icon = L.divIcon({
+        className: 'job-marker',
+        html: `<div class="job-marker-pin"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+
+      const marker = L.marker([job.lat, job.lng], { icon })
+        .bindPopup(`<strong>${job.category}</strong><br/>${job.customer_name}<br/><button class="map-btn" onclick="document.dispatchEvent(new CustomEvent('acceptJob', {detail: ${job.id}}))">Accept Job</button>`);
+      
+      markersGroup.current.addLayer(marker);
+    });
+
+    if (jobsWithCoords.length > 0) {
+      mapInstance.current.fitBounds(markersGroup.current.getBounds(), { padding: [50, 50], maxZoom: 13 });
+    }
+  }, [availableJobs, showMap]);
+
+  // Handle job acceptance from map popup
+  useEffect(() => {
+    const handleMapAccept = (e) => handleAcceptJob(e.detail);
+    document.addEventListener('acceptJob', handleMapAccept);
+    return () => document.removeEventListener('acceptJob', handleMapAccept);
   }, []);
 
   const handleAcceptJob = async (jobId) => {
@@ -66,8 +130,22 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
       </header>
 
       <main style={{ padding: '2rem', flex: 1 }}>
-        <h2 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Available Job Requests</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '2rem', margin: 0 }}>Available Job Requests</h2>
+          <button className="btn btn-secondary" onClick={() => setShowMap(!showMap)}>
+            {showMap ? 'Hide Map' : 'Show Map View'}
+          </button>
+        </div>
         
+        {showMap && (
+           <div className="glass-panel" style={{ height: '400px', marginBottom: '2rem', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+              <div ref={mapRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} />
+              <style>{`
+                .leaflet-container { height: 100%; border-radius: 12px; }
+              `}</style>
+           </div>
+        )}
+
         {availableJobs.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>No jobs currently available nearby.</p>
         ) : (
@@ -78,7 +156,7 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
                   <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{job.category}</h3>
                   {job.distance_km && (
                     <span style={{ background: 'rgba(30,109,94,0.1)', color: 'var(--primary)', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                      📍 {job.distance_km} km away
+                       {job.distance_km} km away
                     </span>
                   )}
                 </div>
@@ -126,6 +204,29 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
       {activeChatJob && (
         <JobChat job={activeChatJob} currentUser={currentUser} onClose={() => setActiveChatJob(null)} />
       )}
+
+      <style>{`
+        .job-marker-pin {
+          width: 20px;
+          height: 20px;
+          background: #f59e0b;
+          border: 2px solid white;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+        .map-btn {
+          margin-top: 8px;
+          padding: 5px 10px;
+          background: var(--primary);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.8rem;
+          width: 100%;
+        }
+      `}</style>
     </div>
   );
 };
