@@ -4,6 +4,7 @@ import { supabase } from '../supabase';
 
 const LoginScreen = ({ onLogin }) => {
   const [isRegistering, setIsRegistering] = useState(false);
+  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('customer');
@@ -14,8 +15,13 @@ const LoginScreen = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     
-    if (!username || !password) {
-      setError('Username and password are required');
+    if (!email || !password) {
+      setError('Email and password are required');
+      return;
+    }
+
+    if (isRegistering && !username) {
+      setError('Username is required for new accounts');
       return;
     }
 
@@ -23,8 +29,7 @@ const LoginScreen = ({ onLogin }) => {
       let authUser;
       
       if (isRegistering) {
-        // 1. Sign up with Supabase Auth (username used as email for simplicity or just fake an email)
-        const email = username.includes('@') ? username : `${username}@sreyou.app`;
+        // 1. Sign up with Supabase Auth
         const { data, error: authErr } = await supabase.auth.signUp({
           email, 
           password,
@@ -34,7 +39,6 @@ const LoginScreen = ({ onLogin }) => {
         authUser = data.user;
       } else {
         // 2. Sign in with Supabase Auth
-        const email = username.includes('@') ? username : `${username}@sreyou.app`;
         const { data, error: authErr } = await supabase.auth.signInWithPassword({
           email, password
         });
@@ -50,9 +54,9 @@ const LoginScreen = ({ onLogin }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           id: authUser.id, 
-          username, 
-          name: name || authUser.user_metadata?.full_name || username, 
-          role: role // Only used on registration, ignored by backend on login if already exists
+          username: username || email.split('@')[0], 
+          name: name || authUser.user_metadata?.full_name || username || email.split('@')[0], 
+          role: role 
         })
       });
       
@@ -92,9 +96,16 @@ const LoginScreen = ({ onLogin }) => {
           )}
           
           <div>
-            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem', color: 'var(--text-secondary)' }}>Username</label>
-            <input type="text" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.8)' }} required />
+            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem', color: 'var(--text-secondary)' }}>Email Address</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.8)' }} placeholder="alex@example.com" required />
           </div>
+
+          {isRegistering && (
+            <div>
+              <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem', color: 'var(--text-secondary)' }}>Username</label>
+              <input type="text" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.8)' }} placeholder="alex_pro" required />
+            </div>
+          )}
 
           <div>
             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem', color: 'var(--text-secondary)' }}>Password</label>
