@@ -34,7 +34,7 @@ function App() {
         // Detect state change from pending -> accepted
         if (lastCheckedJobs.length > 0) {
           data.forEach(job => {
-            const previousState = lastCheckedJobs.find(j => j.id === job.id);
+            const previousState = lastCheckedJobs.find(j => String(j.id) === String(job.id));
             if (previousState && previousState.status === 'pending' && job.status === 'accepted') {
               setNotifications(prev => [{
                 id: Date.now(),
