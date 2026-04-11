@@ -20,6 +20,7 @@ function App() {
   const [lastCheckedJobs, setLastCheckedJobs] = useState([])
   const [activeChatJob, setActiveChatJob] = useState(null)
   const [lastLocation, setLastLocation] = useState(null)
+  const [activeJobId, setActiveJobId] = useState(null)
   
   const [activeTab, setActiveTab] = useState('Services')
   const [isInitializing, setIsInitializing] = useState(true)
@@ -119,7 +120,7 @@ function App() {
     }
 
     try {
-      await fetch(`${API_URL}/api/jobs`, {
+      const res = await fetch(`${API_URL}/api/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -131,18 +132,36 @@ function App() {
           lng
         })
       })
+      const data = await res.json()
+      if (data.id) setActiveJobId(data.id)
     } catch (err) {
       console.error('Failed to post job logs', err)
     }
   }
 
-  const handleMatchFound = () => {
+  const handleMatchFound = (status) => {
+    if (status === 'cancelled') {
+      resetFlow()
+      return
+    }
     setFlowState('found')
+  }
+
+  const handleCancelRequest = async () => {
+    if (activeJobId) {
+      try {
+        await fetch(`${API_URL}/api/jobs/${activeJobId}`, { method: 'DELETE' })
+      } catch (err) {
+        console.error('Failed to delete job', err)
+      }
+    }
+    resetFlow()
   }
 
   const resetFlow = () => {
     setFlowState('idle')
     setSelectedCategory(null)
+    setActiveJobId(null)
   }
 
   if (isInitializing) {
@@ -307,6 +326,7 @@ function App() {
         <MatchingScreen 
           category={selectedCategory} 
           onMatchFound={handleMatchFound} 
+          onCancel={handleCancelRequest}
           location={lastLocation}
         />
       )}

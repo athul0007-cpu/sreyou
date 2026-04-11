@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { API_URL } from '../config';
 
-const MatchingScreen = ({ category, onMatchFound, location }) => {
+const MatchingScreen = ({ category, onMatchFound, onCancel, location }) => {
   const [dots, setDots] = useState('');
-  const [prosFoundCount, setProsFoundCount] = useState(0);
+  const [realProCount, setRealProCount] = useState(0);
+  const [visualMarkers, setVisualMarkers] = useState(0);
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
@@ -14,17 +16,24 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. Map Initialization
+  // 2. Fetch real pro count
+  useEffect(() => {
+    fetch(`${API_URL}/api/users/count-servicers`)
+      .then(res => res.json())
+      .then(data => setRealProCount(data.count || 0))
+      .catch(() => setRealProCount(0));
+  }, []);
+
+  // 3. Map Initialization (Default to Kochi, Kerala)
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
-    // Default to a central-ish coordinate if location is missing (e.g. New York)
-    const center = location ? [location.lat, location.lng] : [40.7128, -74.0060];
+    // Center on Kochi if location is missing
+    const center = location ? [location.lat, location.lng] : [9.9312, 76.2673];
     
-    // Initialize Leaflet Map (Dark Matter Theme)
     const map = L.map(mapRef.current, {
       center: center,
-      zoom: 14,
+      zoom: 13,
       zoomControl: false,
       attributionControl: false
     });
@@ -33,7 +42,7 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
       maxZoom: 20
     }).addTo(map);
 
-    // Custom Icon for User (Pulsing Center)
+    // Privacy-Safe View: Only show Customer's location
     const userDivIcon = L.divIcon({
       className: 'user-marker-container',
       html: `<div class="user-marker-pulse"></div><div class="user-marker-dot">${category?.icon || '📍'}</div>`,
@@ -43,33 +52,33 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
 
     L.marker(center, { icon: userDivIcon }).addTo(map);
 
-    // Random Pro Markers within ~2km
-    const generatePros = () => {
+    // Add randomized simulated pulses to show activity WITHOUT revealing real pro locations (Privacy)
+    const addVisualPulse = () => {
       let count = 0;
       const interval = setInterval(() => {
-        if (count >= 5) {
+        if (count >= 4) {
           clearInterval(interval);
           return;
         }
         
-        const offsetLat = (Math.random() - 0.5) * 0.02; // Roughly 1-2km
-        const offsetLng = (Math.random() - 0.5) * 0.02;
-        const proPos = [center[0] + offsetLat, center[1] + offsetLng];
+        const offsetLat = (Math.random() - 0.5) * 0.03;
+        const offsetLng = (Math.random() - 0.5) * 0.03;
+        const pos = [center[0] + offsetLat, center[1] + offsetLng];
         
-        const proIcon = L.divIcon({
-          className: 'pro-marker',
-          html: `<div class="pro-marker-dot"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7]
+        const pulseIcon = L.divIcon({
+          className: 'pro-pulse',
+          html: `<div class="pro-pulse-dot"></div>`,
+          iconSize: [10, 10],
+          iconAnchor: [5, 5]
         });
 
-        L.marker(proPos, { icon: proIcon }).addTo(map);
-        setProsFoundCount(prev => prev + 1);
+        L.marker(pos, { icon: pulseIcon }).addTo(map);
+        setVisualMarkers(prev => prev + 1);
         count++;
-      }, 800);
+      }, 1200);
     };
 
-    generatePros();
+    addVisualPulse();
     mapInstance.current = map;
 
     return () => {
@@ -80,11 +89,11 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
     };
   }, [location, category]);
 
-  // 3. Auto-success timeout
+  // 4. Stay on screen longer to feel like a real search
   useEffect(() => {
     const timeout = setTimeout(() => {
       onMatchFound(null);
-    }, 6000);
+    }, 12000); 
     return () => clearTimeout(timeout);
   }, [onMatchFound]);
 
@@ -99,7 +108,6 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
       justifyContent: 'center',
       zIndex: 2000,
     }}>
-      {/* Map Container */}
       <div 
         ref={mapRef} 
         style={{
@@ -107,8 +115,8 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
           height: '100vh',
           position: 'absolute',
           top: 0, left: 0,
-          opacity: 0.7,
-          filter: 'grayscale(0.2) contrast(1.1)'
+          opacity: 0.6,
+          filter: 'grayscale(0.3) contrast(1.1)'
         }}
       />
 
@@ -117,37 +125,69 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
         position: 'relative',
         zIndex: 2010,
         textAlign: 'center',
-        background: 'rgba(11, 14, 20, 0.8)',
-        backdropFilter: 'blur(8px)',
-        padding: '2rem 3rem',
-        borderRadius: '24px',
+        background: 'rgba(11, 14, 20, 0.85)',
+        backdropFilter: 'blur(12px)',
+        padding: '2.5rem',
+        borderRadius: '32px',
         border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-        pointerEvents: 'none'
+        boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
+        width: '90%',
+        maxWidth: '400px',
+        pointerEvents: 'auto'
       }}>
-        <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'white', fontWeight: '800' }}>
-          Locating {category?.name}{dots}
+        <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: 'white', fontWeight: '800' }}>
+          Broadcasting{dots}
         </h2>
-        <p style={{ color: '#94a3b8', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-          Searching for nearby gold-tier pros{dots}
+        <p style={{ color: '#94a3b8', fontSize: '1rem', marginBottom: '1.5rem' }}>
+          Finding gold-tier {category?.name} pros nearby
         </p>
+        
         <div style={{ 
-          marginTop: '1.5rem', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          gap: '1rem',
-          color: 'var(--primary)',
-          fontSize: '1.2rem',
-          fontWeight: 'bold'
+          background: 'rgba(255,255,255,0.05)',
+          padding: '1rem',
+          borderRadius: '16px',
+          marginBottom: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
         }}>
-          <span>📍</span>
-          <span>{prosFoundCount} Pros Found Nearby</span>
+          <div style={{ color: 'var(--primary)', fontSize: '1.2rem', fontWeight: 'bold' }}>
+             {realProCount} Pros Registered in Zone
+          </div>
+          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>
+             Exact locations hidden for privacy 🛡️
+          </div>
         </div>
+
+        <button 
+          onClick={onCancel}
+          style={{
+            background: 'transparent',
+            border: '2px solid rgba(239, 68, 68, 0.5)',
+            color: '#ef4444',
+            padding: '1rem 2rem',
+            borderRadius: '12px',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            width: '100%',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+          onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+        >
+          Cancel Request
+        </button>
       </div>
 
       <style>{`
-        .user-marker-container { position: relative; }
+        .user-marker-pulse {
+          position: absolute;
+          width: 40px; height: 40px;
+          background: var(--primary);
+          border-radius: 50%;
+          animation: pulse-out 2s ease-out infinite;
+        }
         .user-marker-dot {
           width: 40px; height: 40px;
           background: var(--primary);
@@ -156,40 +196,28 @@ const MatchingScreen = ({ category, onMatchFound, location }) => {
           display: flex; align-items: center; justify-content: center;
           font-size: 1.5rem;
           position: relative; z-index: 2;
-          box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .user-marker-pulse {
-          position: absolute;
-          top: 0; left: 0;
-          width: 40px; height: 40px;
-          background: var(--primary);
-          border-radius: 50%;
-          animation: pulse-out 2s ease-out infinite;
-          z-index: 1;
         }
         @keyframes pulse-out {
           0% { transform: scale(1); opacity: 0.8; }
-          100% { transform: scale(3.5); opacity: 0; }
+          100% { transform: scale(4); opacity: 0; }
         }
-        .pro-marker-dot {
-          width: 14px; height: 14px;
+        .pro-pulse-dot {
+          width: 10px; height: 10px;
           background: #f59e0b;
-          border: 2px solid white;
           border-radius: 50%;
-          box-shadow: 0 0 10px #f59e0b;
-          animation: fade-in-scale 0.5s ease-out;
+          box-shadow: 0 0 15px #f59e0b;
+          animation: flicker 1.5s infinite alternate;
         }
-        @keyframes fade-in-scale {
-          0% { transform: scale(0); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes flicker {
+          0% { opacity: 0.3; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1.2); }
         }
-        .leaflet-container {
-          background: #0b0e14 !important;
-        }
+        .leaflet-container { background: #0b0e14 !important; }
       `}</style>
     </div>
   );
 };
 
 export default MatchingScreen;
+
 
