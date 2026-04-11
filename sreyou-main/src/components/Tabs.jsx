@@ -3,8 +3,11 @@ import { API_URL } from '../config';
 
 // Separate Tab Views to keep App.jsx clean
 
-export const HistoryTab = ({ currentUser }) => {
+export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
   const [history, setHistory] = useState([]);
+  const [ratingJob, setRatingJob] = useState(null);
+  const [ratingVal, setRatingVal] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
 
   useEffect(() => {
     if (currentUser) {
@@ -14,6 +17,21 @@ export const HistoryTab = ({ currentUser }) => {
         .catch(err => console.error(err));
     }
   }, [currentUser]);
+
+  const submitRating = async (job) => {
+    try {
+      await fetch(`${API_URL}/api/jobs/${job.id}/complete`, { method: 'POST' });
+      await fetch(`${API_URL}/api/reviews`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: job.id, servicerId: job.servicer_id, rating: ratingVal, comment: reviewComment })
+      });
+      setHistory(history.map(h => h.id === job.id ? {...h, status: 'completed'} : h));
+      setRatingJob(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleCancel = async (jobId) => {
     try {
@@ -58,10 +76,53 @@ export const HistoryTab = ({ currentUser }) => {
                     Cancel
                   </button>
                 )}
+                {job.status === 'accepted' && (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => setActiveChatJob(job)}>
+                      Message
+                    </button>
+                    <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => { setRatingJob(job); setRatingVal(5); setReviewComment(''); }}>
+                      Mark Completed
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Inline Rating Modal */}
+      {ratingJob && (
+         <div style={{
+           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+           backgroundColor: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(10px)',
+           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000
+         }}>
+           <div className="glass-panel" style={{ width: '400px', background: 'rgba(255,255,255,0.95)' }}>
+             <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Rate {ratingJob.servicer_name}</h3>
+             
+             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '2rem', cursor: 'pointer', justifyContent: 'center' }}>
+               {[1,2,3,4,5].map(star => (
+                 <span key={star} onClick={() => setRatingVal(star)} style={{ color: star <= ratingVal ? '#f59e0b' : '#ddd' }}>
+                   ★
+                 </span>
+               ))}
+             </div>
+
+             <textarea 
+               placeholder="Leave a short comment (optional)..."
+               value={reviewComment}
+               onChange={e => setReviewComment(e.target.value)}
+               style={{ width: '100%', height: '80px', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '1.5rem', resize: 'none' }}
+             />
+
+             <div style={{ display: 'flex', gap: '1rem' }}>
+               <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setRatingJob(null)}>Cancel</button>
+               <button className="btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => submitRating(ratingJob)}>Submit Review</button>
+             </div>
+           </div>
+         </div>
       )}
     </div>
   );

@@ -10,10 +10,14 @@ app.use(express.json());
 // from crashing on native C++ bindings for the sqlite3 module.
 const store = {
   users: [],
-  jobs: []
+  jobs: [],
+  reviews: [],
+  messages: []
 };
 let lastUserId = 1;
 let lastJobId = 1;
+let lastReviewId = 1;
+let lastMessageId = 1;
 
 // Register a new user
 app.post('/api/auth/register', (req, res) => {
@@ -143,6 +147,70 @@ app.delete('/api/jobs/:id', (req, res) => {
 
   store.jobs.splice(jobIndex, 1);
   res.json({ message: 'Job cancelled successfully' });
+});
+
+// Complete a job
+app.post('/api/jobs/:id/complete', (req, res) => {
+  const jobId = parseInt(req.params.id, 10);
+  const job = store.jobs.find(j => j.id === jobId && j.status === 'accepted');
+  if (!job) return res.status(404).json({ error: 'Job not found or not accepted' });
+  
+  job.status = 'completed';
+  job.updated_at = new Date().toISOString();
+  
+  // Clean up messages to save memory
+  store.messages = store.messages.filter(m => m.jobId !== jobId);
+  
+  res.json({ message: 'Job completed' });
+});
+
+// Submit a review
+app.post('/api/reviews', (req, res) => {
+  const { jobId, servicerId, rating, comment } = req.body;
+  if (!jobId || !servicerId || !rating) return res.status(400).json({ error: 'Missing review fields' });
+
+  const review = {
+    id: lastReviewId++,
+    jobId,
+    servicerId: String(servicerId),
+    rating: parseInt(rating, 10),
+    comment: comment || '',
+    created_at: new Date().toISOString()
+  };
+  store.reviews.push(review);
+  res.status(201).json(review);
+});
+
+// Get reviews for a servicer
+app.get('/api/users/:id/reviews', (req, res) => {
+  const servicerId = String(req.params.id);
+  const restr = store.reviews.filter(r => r.servicerId === servicerId);
+  res.json(restr);
+});
+
+// Post a message
+app.post('/api/messages/:jobId', (req, res) => {
+  const jobId = parseInt(req.params.jobId, 10);
+  const { senderId, senderName, text } = req.body;
+  if (!text) return res.status(400).json({ error: 'Message text required' });
+
+  const msg = {
+    id: lastMessageId++,
+    jobId,
+    senderId: String(senderId),
+    senderName,
+    text,
+    created_at: new Date().toISOString()
+  };
+  store.messages.push(msg);
+  res.status(201).json(msg);
+});
+
+// Get messages for a job
+app.get('/api/messages/:jobId', (req, res) => {
+  const jobId = parseInt(req.params.jobId, 10);
+  const msgs = store.messages.filter(m => m.jobId === jobId);
+  res.json(msgs);
 });
 
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {

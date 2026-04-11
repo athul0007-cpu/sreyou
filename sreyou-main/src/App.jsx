@@ -6,6 +6,7 @@ import MatchingScreen from './components/MatchingScreen'
 import { HistoryTab, ProfileTab } from './components/Tabs'
 import LoginScreen from './components/LoginScreen'
 import ServicerDashboard from './components/ServicerDashboard'
+import JobChat from './components/JobChat'
 import { API_URL } from './config'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
   const [notifications, setNotifications] = useState([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [lastCheckedJobs, setLastCheckedJobs] = useState([])
+  const [activeChatJob, setActiveChatJob] = useState(null)
   
   // Controls the main view
   const [activeTab, setActiveTab] = useState('Services')
@@ -216,7 +218,7 @@ function App() {
                 </>
               )}
 
-              {activeTab === 'History' && <HistoryTab currentUser={currentUser} />}
+              {activeTab === 'History' && <HistoryTab currentUser={currentUser} setActiveChatJob={setActiveChatJob} />}
               {activeTab === 'Profile' && <ProfileTab userProfile={currentUser} onUpdateUser={setCurrentUser} />}
 
             </div>
@@ -276,6 +278,10 @@ function App() {
             </button>
           </div>
         </div>
+      )}
+
+      {activeChatJob && (
+        <JobChat job={activeChatJob} currentUser={currentUser} onClose={() => setActiveChatJob(null)} />
       )}
     </div>
   )

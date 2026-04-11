@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
+import JobChat from './JobChat';
 
 const ServicerDashboard = ({ currentUser, onLogout }) => {
   const [availableJobs, setAvailableJobs] = useState([]);
   const [myJobs, setMyJobs] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [activeChatJob, setActiveChatJob] = useState(null);
 
   const fetchJobs = async () => {
     try {
@@ -14,10 +17,18 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
       const resM = await fetch(`${API_URL}/api/users/${currentUser.id}/jobs?role=servicer`);
       const dataM = await resM.json();
       setMyJobs(dataM);
+
+      const resR = await fetch(`${API_URL}/api/users/${currentUser.id}/reviews`);
+      const dataR = await resR.json();
+      setReviews(dataR);
     } catch(err) {
       console.error(err);
     }
   };
+
+  const avgRating = reviews.length > 0 
+    ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) 
+    : 'No ratings yet';
 
   useEffect(() => {
     fetchJobs();
@@ -46,7 +57,10 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
           <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Servicer Portal</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ fontWeight: '600' }}>{currentUser.name}</span>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontWeight: '600', display: 'block' }}>{currentUser.name}</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>⭐ {avgRating}</span>
+          </div>
           <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }} onClick={onLogout} title="Sign out of your servicer account">Logout</button>
         </div>
       </header>
@@ -86,14 +100,25 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
                     <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{job.category} - {job.customer_name}</h3>
                     <p style={{ color: 'var(--text-secondary)' }}>{job.description}</p>
                   </div>
-                  <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
-                    Accepted
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                    <div style={{ color: 'var(--primary)', fontWeight: 'bold', textTransform: 'capitalize' }}>
+                      {job.status}
+                    </div>
+                    {job.status === 'accepted' && (
+                      <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => setActiveChatJob(job)}>
+                        Message
+                      </button>
+                    )}
                   </div>
                </div>
             ))}
           </div>
         )}
       </main>
+
+      {activeChatJob && (
+        <JobChat job={activeChatJob} currentUser={currentUser} onClose={() => setActiveChatJob(null)} />
+      )}
     </div>
   );
 };
