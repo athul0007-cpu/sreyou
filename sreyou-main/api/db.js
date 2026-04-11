@@ -2,6 +2,7 @@ import sqlite3 from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +12,7 @@ const isServerless = process.env.VERCEL || process.env.NODE_ENV === 'production'
 let dbPath = process.env.DB_PATH || path.resolve(__dirname, 'store.db');
 
 if (isServerless) {
-  const tmpPath = path.join('/tmp', 'store.db');
+  const tmpPath = path.join(os.tmpdir(), 'store.db');
   if (!fs.existsSync(tmpPath) && fs.existsSync(dbPath)) {
     try {
       fs.copyFileSync(dbPath, tmpPath);
