@@ -41,7 +41,7 @@ function App() {
           customer_id: currentUser.id,
           customer_name: currentUser.name,
           category: selectedCategory.name,
-          description: details || ''
+          description: details ? `${details.description} (Address: ${details.address})` : ''
         })
       })
     } catch (err) {
