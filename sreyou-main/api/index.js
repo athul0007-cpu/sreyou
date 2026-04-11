@@ -1,10 +1,19 @@
 import express from 'express';
 import cors from 'cors';
-import db from './db.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// --- IN-MEMORY DATABASE ---
+// Replaces SQLite temporarily to prevent Vercel Serverless Functions 
+// from crashing on native C++ bindings for the sqlite3 module.
+const store = {
+  users: [],
+  jobs: []
+};
+let lastUserId = 1;
+let lastJobId = 1;
 
 // Register a new user
 app.post('/api/auth/register', (req, res) => {
@@ -13,16 +22,14 @@ app.post('/api/auth/register', (req, res) => {
     return res.status(400).json({ error: 'Username, password, and role are required' });
   }
 
-  const query = `INSERT INTO users (username, password, role, name) VALUES (?, ?, ?, ?)`;
-  db.run(query, [username, password, role, name || username], function(err) {
-    if (err) {
-      if (err.message.includes('UNIQUE')) {
-        return res.status(400).json({ error: 'Username already taken' });
-      }
-      return res.status(500).json({ error: err.message });
-    }
-    res.status(201).json({ user: { id: this.lastID, username, role, name: name || username } });
-  });
+  const existing = store.users.find(u => u.username === username);
+  if (existing) {
+    return res.status(400).json({ error: 'Username already taken' });
+  }
+
+  const user = { id: lastUserId++, username, password, role, name: name || username };
+  store.users.push(user);
+  res.status(201).json({ user: { id: user.id, username, role, name: user.name } });
 });
 
 // Login user
@@ -32,12 +39,12 @@ app.post('/api/auth/login', (req, res) => {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
-  db.get(`SELECT id, username, role, name FROM users WHERE username = ? AND password = ?`, [username, password], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(401).json({ error: 'Invalid credentials' });
-    
-    res.json({ user: row });
-  });
+  const user = store.users.find(u => u.username === username && u.password === password);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  res.json({ user: { id: user.id, username, role: user.role, name: user.name } });
 });
 
 // Broadcast (create) a job
@@ -48,65 +55,64 @@ app.post('/api/jobs', (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const query = `INSERT INTO jobs (customer_id, customer_name, category, description, status) 
-                 VALUES (?, ?, ?, ?, 'pending')`;
-  
-  db.run(query, [customer_id, customer_name, category, description || ''], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.status(201).json({ 
-      id: this.lastID, 
-      status: 'pending',
-      message: 'Job broadcasted successfully' 
-    });
-  });
+  const job = {
+    id: lastJobId++,
+    customer_id: String(customer_id),
+    customer_name,
+    category,
+    description: description || '',
+    status: 'pending',
+    servicer_id: null,
+    servicer_name: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  store.jobs.push(job);
+  res.status(201).json({ id: job.id, status: 'pending', message: 'Job broadcasted successfully' });
 });
 
 // Get all pending jobs (for servicer dashboard)
 app.get('/api/jobs/available', (req, res) => {
-  db.all(`SELECT * FROM jobs WHERE status = 'pending' ORDER BY created_at DESC`, [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(rows);
-  });
+  const available = store.jobs
+    .filter(j => j.status === 'pending')
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  res.json(available);
 });
 
 // Accept a job
 app.post('/api/jobs/:id/accept', (req, res) => {
-  const jobId = req.params.id;
+  const jobId = parseInt(req.params.id, 10);
   const { servicer_id, servicer_name } = req.body;
   
   if (!servicer_id || !servicer_name) {
     return res.status(400).json({ error: 'Servicer details required' });
   }
 
-  db.run(`UPDATE jobs SET status = 'accepted', servicer_id = ?, servicer_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'pending'`,
-    [servicer_id, servicer_name, jobId],
-    function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      if (this.changes === 0) return res.status(404).json({ error: 'Job not found or already accepted' });
-      res.json({ message: 'Job accepted successfully' });
-    }
-  );
+  const job = store.jobs.find(j => j.id === jobId && j.status === 'pending');
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found or already accepted' });
+  }
+
+  job.status = 'accepted';
+  job.servicer_id = String(servicer_id);
+  job.servicer_name = servicer_name;
+  job.updated_at = new Date().toISOString();
+
+  res.json({ message: 'Job accepted successfully' });
 });
 
 // Get jobs for a specific user (customer history or servicer active)
 app.get('/api/users/:userId/jobs', (req, res) => {
-  const userId = req.params.userId;
+  const userId = String(req.params.userId);
   const role = req.query.role; // 'customer' or 'servicer'
   
   if (!role) return res.status(400).json({ error: 'Role query param required' });
 
-  const query = role === 'customer' 
-    ? `SELECT * FROM jobs WHERE customer_id = ? ORDER BY created_at DESC`
-    : `SELECT * FROM jobs WHERE servicer_id = ? AND status = 'accepted' ORDER BY created_at DESC`;
+  const jobs = store.jobs
+    .filter(j => role === 'customer' ? j.customer_id === userId : (j.servicer_id === userId && j.status === 'accepted'))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
-  db.all(query, [userId], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+  res.json(jobs);
 });
 
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
