@@ -7,6 +7,7 @@ import { HistoryTab, ProfileTab } from './components/Tabs'
 import LoginScreen from './components/LoginScreen'
 import ServicerDashboard from './components/ServicerDashboard'
 import JobChat from './components/JobChat'
+import { supabase } from './supabase'
 import { API_URL } from './config'
 
 function App() {
@@ -19,10 +20,43 @@ function App() {
   const [lastCheckedJobs, setLastCheckedJobs] = useState([])
   const [activeChatJob, setActiveChatJob] = useState(null)
   
-  // Controls the main view
   const [activeTab, setActiveTab] = useState('Services')
+  const [isInitializing, setIsInitializing] = useState(true)
+  
+  // 1. Initial hydration and session listener
+  useEffect(() => {
+    const initSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await fetchProfile(session.user.id);
+      }
+      setIsInitializing(false);
+    };
 
-  // Listen for real-time accepted jobs when acting as a customer
+    initSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        await fetchProfile(session.user.id);
+      } else {
+        setCurrentUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchProfile = async (userId) => {
+    try {
+      const res = await fetch(`${API_URL}/api/users/${userId}`);
+      const data = await res.json();
+      if (data.user) {
+        setCurrentUser(data.user);
+      }
+    } catch (err) {
+      console.error("Failed to load profile", err);
+    }
+  };
   useEffect(() => {
     if (currentUser?.role !== 'customer') return;
     
@@ -93,12 +127,28 @@ function App() {
     setSelectedCategory(null)
   }
 
+  if (isInitializing) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+        <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
+          <div className="ping" style={{ width: '40px', height: '40px', background: 'var(--primary)', borderRadius: '50%', margin: '0 auto 1rem' }}></div>
+          <p style={{ color: 'var(--text-secondary)' }}>Restoring SreYou session...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (currentUser === null) {
     return <LoginScreen onLogin={handleLogin} />
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setCurrentUser(null);
+  };
+
   if (currentUser.role === 'servicer') {
-    return <ServicerDashboard currentUser={currentUser} onLogout={() => setCurrentUser(null)} />
+    return <ServicerDashboard currentUser={currentUser} onLogout={handleLogout} />
   }
 
   // Customer View
@@ -115,7 +165,7 @@ function App() {
           <div className={`sidebar-icon ${activeTab === 'History' ? 'active' : ''}`} onClick={() => setActiveTab('History')} title="History"><span>📅</span></div>
           <div className={`sidebar-icon ${activeTab === 'Profile' ? 'active' : ''}`} onClick={() => setActiveTab('Profile')} title="Profile"><span>💼</span></div>
           
-          <div style={{marginTop: 'auto'}} className="sidebar-icon" onClick={() => setCurrentUser(null)} title="Logout"><span>🚪</span></div>
+          <div style={{marginTop: 'auto'}} className="sidebar-icon" onClick={handleLogout} title="Logout"><span>🚪</span></div>
         </aside>
 
         {/* Main Content Dashboard */}

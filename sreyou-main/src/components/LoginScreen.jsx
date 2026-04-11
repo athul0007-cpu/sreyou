@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { API_URL } from '../config';
+import { supabase } from '../supabase';
 
 const LoginScreen = ({ onLogin }) => {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -18,22 +19,47 @@ const LoginScreen = ({ onLogin }) => {
       return;
     }
 
-    const endpoint = isRegistering ? `${API_URL}/api/auth/register` : `${API_URL}/api/auth/login`;
-    const payload = isRegistering ? { username, password, role, name: name || username } : { username, password };
-
     try {
-      const res = await fetch(endpoint, {
+      let authUser;
+      
+      if (isRegistering) {
+        // 1. Sign up with Supabase Auth (username used as email for simplicity or just fake an email)
+        const email = username.includes('@') ? username : `${username}@sreyou.app`;
+        const { data, error: authErr } = await supabase.auth.signUp({
+          email, 
+          password,
+          options: { data: { full_name: name || username } }
+        });
+        if (authErr) throw authErr;
+        authUser = data.user;
+      } else {
+        // 2. Sign in with Supabase Auth
+        const email = username.includes('@') ? username : `${username}@sreyou.app`;
+        const { data, error: authErr } = await supabase.auth.signInWithPassword({
+          email, password
+        });
+        if (authErr) throw authErr;
+        authUser = data.user;
+      }
+
+      if (!authUser) throw new Error("Authentication failed");
+
+      // 3. Sync with our custom profile table
+      const res = await fetch(`${API_URL}/api/auth/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ 
+          id: authUser.id, 
+          username, 
+          name: name || authUser.user_metadata?.full_name || username, 
+          role: role // Only used on registration, ignored by backend on login if already exists
+        })
       });
-      const data = await res.json();
       
-      if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed');
-      }
-      
-      onLogin(data.user);
+      const syncData = await res.json();
+      if (!res.ok) throw new Error(syncData.error || 'Profile sync failed');
+
+      onLogin(syncData.user);
     } catch (err) {
       setError(err.message);
     }

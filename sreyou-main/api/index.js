@@ -11,33 +11,41 @@ const supabaseUrl = 'https://kkeyyjmupssazgterrut.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrZXl5am11cHNzYXpndGVycnV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTg2NTEsImV4cCI6MjA5MTQ5NDY1MX0.N5MKRGSwHe_3qLoQJ0AQ56K7Rbvrk_iAsOZY9Cd4R6I';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Register a new user
-app.post('/api/auth/register', async (req, res) => {
-  const { username, password, role, name } = req.body;
-  if (!username || !password || !role) {
-    return res.status(400).json({ error: 'Username, password, and role are required' });
-  }
+// Sync user profile from Supabase Auth
+// This ensures that when a user logs in/signs up, we have their role/name in our 'users' table
+app.post('/api/auth/sync', async (req, res) => {
+  const { id, username, name, role } = req.body;
+  if (!id || !role) return res.status(400).json({ error: 'Missing sync data' });
 
   try {
-    const { data: existing } = await supabase.from('users').select('id').eq('username', username).single();
-    if (existing) return res.status(400).json({ error: 'Username already taken' });
+    // Check if profile exists
+    const { data: profile } = await supabase.from('users').select('*').eq('id', id).single();
+    
+    if (profile) {
+      return res.json({ user: profile });
+    }
 
-    const { data, error } = await supabase.from('users').insert([{ username, password, role, name: name || username }]).select().single();
+    // Create new profile linked to Auth ID
+    const { data: newProfile, error } = await supabase.from('users').insert([{ 
+      id, 
+      username, 
+      role, 
+      name: name || username 
+    }]).select().single();
+
     if (error) throw error;
-    res.status(201).json({ user: { id: data.id, username, role, name: data.name } });
+    res.status(201).json({ user: newProfile });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Login user
-app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
+// Helper to get profile by ID
+app.get('/api/users/:id', async (req, res) => {
   try {
-    const { data: user, error } = await supabase.from('users').select('*').eq('username', username).eq('password', password).single();
-    if (!user || error) return res.status(401).json({ error: 'Invalid credentials' });
-    
-    res.json({ user: { id: user.id, username, role: user.role, name: user.name } });
+    const { data, error } = await supabase.from('users').select('*').eq('id', req.params.id).single();
+    if (error) throw error;
+    res.json({ user: data });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
