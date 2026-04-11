@@ -19,6 +19,7 @@ function App() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [lastCheckedJobs, setLastCheckedJobs] = useState([])
   const [activeChatJob, setActiveChatJob] = useState(null)
+  const [lastLocation, setLastLocation] = useState(null)
   
   const [activeTab, setActiveTab] = useState('Services')
   const [isInitializing, setIsInitializing] = useState(true)
@@ -102,6 +103,21 @@ function App() {
 
   const handleJobSubmit = async (details) => {
     setFlowState('matching')
+    
+    // 1. Try to get geolocation
+    let lat = null, lng = null;
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+      });
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+      setLastLocation({ lat, lng });
+    } catch (err) {
+      console.warn("Geolocation failed or denied", err);
+      setLastLocation(null);
+    }
+
     try {
       await fetch(`${API_URL}/api/jobs`, {
         method: 'POST',
@@ -110,7 +126,9 @@ function App() {
           customer_id: currentUser.id,
           customer_name: currentUser.name,
           category: selectedCategory.name,
-          description: details ? `${details.description} (Address: ${details.address})` : ''
+          description: details ? `${details.description} (Address: ${details.address})` : '',
+          lat,
+          lng
         })
       })
     } catch (err) {
@@ -289,6 +307,7 @@ function App() {
         <MatchingScreen 
           category={selectedCategory} 
           onMatchFound={handleMatchFound} 
+          location={lastLocation}
         />
       )}
 

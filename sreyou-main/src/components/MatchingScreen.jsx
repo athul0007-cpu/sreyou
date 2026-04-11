@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
-const MatchingScreen = ({ category, onMatchFound }) => {
+const MatchingScreen = ({ category, onMatchFound, location }) => {
   const [dots, setDots] = useState('');
-  const [prosFound, setProsFound] = useState([]);
+  const [prosFoundCount, setProsFoundCount] = useState(0);
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
 
-  // Simulate progress dots
+  // 1. Progress Dots
   useEffect(() => {
     const interval = setInterval(() => {
       setDots(prev => prev.length >= 3 ? '' : prev + '.');
@@ -12,26 +14,77 @@ const MatchingScreen = ({ category, onMatchFound }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Reveal random "pros" dots over time for radar
+  // 2. Map Initialization
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProsFound(prev => {
-        if (prev.length >= 5) return prev;
-        return [...prev, {
-          id: prev.length,
-          top: Math.random() * 70 + 15 + '%',
-          left: Math.random() * 70 + 15 + '%',
-        }];
-      });
-    }, 700);
-    return () => clearInterval(interval);
-  }, []);
+    if (!mapRef.current || mapInstance.current) return;
 
-  // Simulate broadcasting request after 4.5 seconds
+    // Default to a central-ish coordinate if location is missing (e.g. New York)
+    const center = location ? [location.lat, location.lng] : [40.7128, -74.0060];
+    
+    // Initialize Leaflet Map (Dark Matter Theme)
+    const map = L.map(mapRef.current, {
+      center: center,
+      zoom: 14,
+      zoomControl: false,
+      attributionControl: false
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20
+    }).addTo(map);
+
+    // Custom Icon for User (Pulsing Center)
+    const userDivIcon = L.divIcon({
+      className: 'user-marker-container',
+      html: `<div class="user-marker-pulse"></div><div class="user-marker-dot">${category?.icon || '📍'}</div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+
+    L.marker(center, { icon: userDivIcon }).addTo(map);
+
+    // Random Pro Markers within ~2km
+    const generatePros = () => {
+      let count = 0;
+      const interval = setInterval(() => {
+        if (count >= 5) {
+          clearInterval(interval);
+          return;
+        }
+        
+        const offsetLat = (Math.random() - 0.5) * 0.02; // Roughly 1-2km
+        const offsetLng = (Math.random() - 0.5) * 0.02;
+        const proPos = [center[0] + offsetLat, center[1] + offsetLng];
+        
+        const proIcon = L.divIcon({
+          className: 'pro-marker',
+          html: `<div class="pro-marker-dot"></div>`,
+          iconSize: [14, 14],
+          iconAnchor: [7, 7]
+        });
+
+        L.marker(proPos, { icon: proIcon }).addTo(map);
+        setProsFoundCount(prev => prev + 1);
+        count++;
+      }, 800);
+    };
+
+    generatePros();
+    mapInstance.current = map;
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, [location, category]);
+
+  // 3. Auto-success timeout
   useEffect(() => {
     const timeout = setTimeout(() => {
-      onMatchFound(null); // Broadcasted successfully
-    }, 4500);
+      onMatchFound(null);
+    }, 6000);
     return () => clearTimeout(timeout);
   }, [onMatchFound]);
 
@@ -39,88 +92,99 @@ const MatchingScreen = ({ category, onMatchFound }) => {
     <div style={{
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(20px)',
+      backgroundColor: '#0b0e14',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 2000,
     }}>
-      {/* Advanced Radar Box */}
+      {/* Map Container */}
+      <div 
+        ref={mapRef} 
+        style={{
+          width: '100vw',
+          height: '100vh',
+          position: 'absolute',
+          top: 0, left: 0,
+          opacity: 0.7,
+          filter: 'grayscale(0.2) contrast(1.1)'
+        }}
+      />
+
+      {/* Overlay UI */}
       <div style={{
         position: 'relative',
-        width: '300px',
-        height: '300px',
-        borderRadius: '50%',
-        backgroundColor: '#e6f0ed',
-        border: '2px solid rgba(30,109,94,0.1)',
-        overflow: 'hidden',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: '3rem',
-        boxShadow: 'inset 0 0 50px rgba(0,0,0,0.05), 0 20px 40px rgba(30,109,94,0.1)'
+        zIndex: 2010,
+        textAlign: 'center',
+        background: 'rgba(11, 14, 20, 0.8)',
+        backdropFilter: 'blur(8px)',
+        padding: '2rem 3rem',
+        borderRadius: '24px',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+        pointerEvents: 'none'
       }}>
-        {/* Radar Map Grids */}
-        <div style={{ position: 'absolute', width: '100%', height: '100%', border: '1px solid rgba(30,109,94,0.15)', borderRadius: '50%', transform: 'scale(0.66)' }} />
-        <div style={{ position: 'absolute', width: '100%', height: '100%', border: '1px solid rgba(30,109,94,0.15)', borderRadius: '50%', transform: 'scale(0.33)' }} />
-        <div style={{ position: 'absolute', width: '1px', height: '100%', background: 'rgba(30,109,94,0.15)' }} />
-        <div style={{ position: 'absolute', height: '1px', width: '100%', background: 'rgba(30,109,94,0.15)' }} />
-
-        {/* Radar Scanner Sweep Effect */}
-        <div style={{
-          position: 'absolute',
-          width: '50%',
-          height: '50%',
-          top: '0', right: '0',
-          transformOrigin: '0% 100%',
-          background: 'linear-gradient(90deg, rgba(30,109,94,0) 0%, rgba(30,109,94,0.5) 100%)',
-          animation: 'sweep 2s linear infinite',
-          zIndex: 5
-        }}></div>
-
-        {/* Customer Center Dot (You) */}
-        <div style={{
-          width: '50px', height: '50px',
-          borderRadius: '50%', backgroundColor: 'var(--primary)',
-          color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.5rem', zIndex: 10,
-          boxShadow: '0 0 0 6px rgba(255,255,255,0.8), 0 5px 15px rgba(0,0,0,0.2)'
+        <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'white', fontWeight: '800' }}>
+          Locating {category?.name}{dots}
+        </h2>
+        <p style={{ color: '#94a3b8', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+          Searching for nearby gold-tier pros{dots}
+        </p>
+        <div style={{ 
+          marginTop: '1.5rem', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          gap: '1rem',
+          color: 'var(--primary)',
+          fontSize: '1.2rem',
+          fontWeight: 'bold'
         }}>
-          {category?.icon || '📍'}
+          <span>📍</span>
+          <span>{prosFoundCount} Pros Found Nearby</span>
         </div>
-
-        {/* Pinged Pros markers popping up randomly */}
-        {prosFound.map(pro => (
-          <div key={pro.id} style={{
-            position: 'absolute',
-            top: pro.top, left: pro.left,
-            width: '14px', height: '14px',
-            borderRadius: '50%',
-            backgroundColor: '#f59e0b',
-            border: '2px solid white',
-            boxShadow: '0 0 10px rgba(245, 158, 11, 0.8)',
-            zIndex: 15,
-            animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
-          }} />
-        ))}
       </div>
 
-      <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }} className="animate-up">
-        Locating a {category?.name}{dots}
-      </h2>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }} className="animate-up delay-1">
-        Found {prosFound.length} professionals within 5 km...
-      </p>
-
-      {/* Embedded CSS for Complex Animations */}
       <style>{`
-        @keyframes sweep {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        .user-marker-container { position: relative; }
+        .user-marker-dot {
+          width: 40px; height: 40px;
+          background: var(--primary);
+          border: 3px solid white;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.5rem;
+          position: relative; z-index: 2;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        @keyframes popIn {
+        .user-marker-pulse {
+          position: absolute;
+          top: 0; left: 0;
+          width: 40px; height: 40px;
+          background: var(--primary);
+          border-radius: 50%;
+          animation: pulse-out 2s ease-out infinite;
+          z-index: 1;
+        }
+        @keyframes pulse-out {
+          0% { transform: scale(1); opacity: 0.8; }
+          100% { transform: scale(3.5); opacity: 0; }
+        }
+        .pro-marker-dot {
+          width: 14px; height: 14px;
+          background: #f59e0b;
+          border: 2px solid white;
+          border-radius: 50%;
+          box-shadow: 0 0 10px #f59e0b;
+          animation: fade-in-scale 0.5s ease-out;
+        }
+        @keyframes fade-in-scale {
           0% { transform: scale(0); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
+        }
+        .leaflet-container {
+          background: #0b0e14 !important;
         }
       `}</style>
     </div>
@@ -128,3 +192,4 @@ const MatchingScreen = ({ category, onMatchFound }) => {
 };
 
 export default MatchingScreen;
+
