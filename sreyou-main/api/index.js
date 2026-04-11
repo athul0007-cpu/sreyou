@@ -233,6 +233,20 @@ app.get('/api/messages/:jobId', async (req, res) => {
   }
 });
 
+// Count total available professionals (for Privacy-Safe Radar)
+app.get('/api/users/count-servicers', async (req, res) => {
+  try {
+    const { count, error } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'servicer');
+    if (error) throw error;
+    res.json({ count: count || 0 });
+  } catch (err) {
+    res.status(500).json({ count: 0 });
+  }
+});
+
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
