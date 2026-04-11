@@ -109,10 +109,40 @@ app.get('/api/users/:userId/jobs', (req, res) => {
   if (!role) return res.status(400).json({ error: 'Role query param required' });
 
   const jobs = store.jobs
-    .filter(j => role === 'customer' ? j.customer_id === userId : (j.servicer_id === userId && j.status === 'accepted'))
+    .filter(j => role === 'customer' ? String(j.customer_id) === String(userId) : (String(j.servicer_id) === String(userId) && j.status === 'accepted'))
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
   res.json(jobs);
+});
+
+// Update user profile (email, phone, location)
+app.put('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const { email, phone, location } = req.body;
+  
+  const user = store.users.find(u => u.id === userId);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  user.email = email;
+  user.phone = phone;
+  user.location = location;
+
+  res.json({ user: { id: user.id, username: user.username, role: user.role, name: user.name, email: user.email, phone: user.phone, location: user.location } });
+});
+
+// Cancel a job
+app.delete('/api/jobs/:id', (req, res) => {
+  const jobId = parseInt(req.params.id, 10);
+  const jobIndex = store.jobs.findIndex(j => j.id === jobId && j.status === 'pending');
+  
+  if (jobIndex === -1) {
+    return res.status(404).json({ error: 'Job not found or cannot be cancelled' });
+  }
+
+  store.jobs.splice(jobIndex, 1);
+  res.json({ message: 'Job cancelled successfully' });
 });
 
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {

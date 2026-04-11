@@ -15,6 +15,17 @@ export const HistoryTab = ({ currentUser }) => {
     }
   }, [currentUser]);
 
+  const handleCancel = async (jobId) => {
+    try {
+      if (confirm('Cancel this service request?')) {
+        await fetch(`${API_URL}/api/jobs/${jobId}`, { method: 'DELETE' });
+        setHistory(history.filter(h => h.id !== jobId));
+      }
+    } catch (err) {
+      console.error('Failed to cancel job', err);
+    }
+  };
+
   return (
     <div className="glass-panel animate-up" style={{ padding: '2rem' }}>
       <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: '600' }}>Service History</h2>
@@ -38,10 +49,15 @@ export const HistoryTab = ({ currentUser }) => {
                   {job.servicer_name ? ` • Assigned to ${job.servicer_name}` : ' • Waiting for Professional'}
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
                 <div style={{ color: job.status === 'accepted' ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '600', textTransform: 'capitalize' }}>
                   {job.status}
                 </div>
+                {job.status === 'pending' && (
+                  <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleCancel(job.id)}>
+                    Cancel
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -51,42 +67,85 @@ export const HistoryTab = ({ currentUser }) => {
   );
 };
 
-export const ProfileTab = ({ userProfile }) => (
-  <div className="glass-panel animate-up" style={{ padding: '2rem', display: 'flex', gap: '3rem' }}>
-    <div style={{ width: '250px', textAlign: 'center' }}>
-      <div 
-        style={{ 
-          width: '150px', height: '150px', borderRadius: '50%', marginBottom: '1rem', 
-          backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', margin: '0 auto 1rem' 
-        }}
-      >
-        {userProfile?.name?.charAt(0) || 'U'}
+export const ProfileTab = ({ userProfile, onUpdateUser }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    email: userProfile?.email || '',
+    phone: userProfile?.phone || '',
+    location: userProfile?.location || ''
+  });
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/users/${userProfile.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (data.user && onUpdateUser) {
+        onUpdateUser(data.user);
+      }
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to save profile', err);
+    }
+  };
+
+  return (
+    <div className="glass-panel animate-up" style={{ padding: '2rem', display: 'flex', gap: '3rem' }}>
+      <div style={{ width: '250px', textAlign: 'center' }}>
+        <div 
+          style={{ 
+            width: '150px', height: '150px', borderRadius: '50%', marginBottom: '1rem', 
+            backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', margin: '0 auto 1rem' 
+          }}
+        >
+          {userProfile?.name?.charAt(0) || 'U'}
+        </div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>{userProfile?.name || 'Customer'}</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>Customer Account</p>
+        
+        <button className="btn btn-secondary" style={{ marginTop: '1.5rem', width: '100%', justifyContent: 'center' }} onClick={() => setIsEditing(!isEditing)} title="Update your account information">
+          {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+        </button>
       </div>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>{userProfile?.name || 'Customer'}</h2>
-      <p style={{ color: 'var(--text-secondary)' }}>Customer Account</p>
       
-      <button className="btn btn-secondary" style={{ marginTop: '1.5rem', width: '100%', justifyContent: 'center' }} title="Update your account information">
-        Edit Profile
-      </button>
-    </div>
-    
-    <div style={{ flex: 1 }}>
-      <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>Account Details</h3>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        <div>
-          <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Email Address</label>
-          <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>Not configured</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Account Details</h3>
+          {isEditing && (
+            <button className="btn" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }} onClick={handleSave}>Save Changes</button>
+          )}
         </div>
-        <div>
-          <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Phone Number</label>
-          <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>Not configured</div>
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Default Saved Location</label>
-          <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>Not configured</div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div>
+            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Email Address</label>
+            {isEditing ? (
+              <input type="email" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="example@email.com" />
+            ) : (
+              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>{userProfile?.email || 'Not configured'}</div>
+            )}
+          </div>
+          <div>
+            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Phone Number</label>
+            {isEditing ? (
+              <input type="tel" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="(555) 000-0000" />
+            ) : (
+              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>{userProfile?.phone || 'Not configured'}</div>
+            )}
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Default Saved Location</label>
+            {isEditing ? (
+              <input type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="123 Main St, City" />
+            ) : (
+              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>{userProfile?.location || 'Not configured'}</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

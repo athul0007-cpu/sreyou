@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './index.css'
 import CategoryGrid from './components/CategoryGrid'
 import JobRequestModal from './components/JobRequestModal'
@@ -13,9 +13,42 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [flowState, setFlowState] = useState('idle') 
+  const [notifications, setNotifications] = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [lastCheckedJobs, setLastCheckedJobs] = useState([])
   
   // Controls the main view
   const [activeTab, setActiveTab] = useState('Services')
+
+  // Listen for real-time accepted jobs when acting as a customer
+  useEffect(() => {
+    if (currentUser?.role !== 'customer') return;
+    
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/users/${currentUser.id}/jobs?role=customer`);
+        const data = await res.json();
+        
+        // Detect state change from pending -> accepted
+        if (lastCheckedJobs.length > 0) {
+          data.forEach(job => {
+            const previousState = lastCheckedJobs.find(j => j.id === job.id);
+            if (previousState && previousState.status === 'pending' && job.status === 'accepted') {
+              setNotifications(prev => [{
+                id: Date.now(),
+                message: `${job.servicer_name} accepted your ${job.category} request!`,
+                read: false
+              }, ...prev]);
+            }
+          });
+        }
+        
+        setLastCheckedJobs(data);
+      } catch (err) {}
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [currentUser, lastCheckedJobs]);
 
   const handleLogin = (user) => {
     setCurrentUser(user)
@@ -106,8 +139,49 @@ function App() {
               <span style={{ color: 'var(--text-secondary)'}}>🔍</span>
             </div>
 
-            <div className="user-profile">
-              <span style={{fontSize: '1.2rem', cursor: 'pointer', marginRight: '0.5rem'}}>🔔</span>
+            <div className="user-profile" style={{ position: 'relative' }}>
+              <div 
+                style={{ position: 'relative', cursor: 'pointer', marginRight: '1rem' }} 
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <span style={{fontSize: '1.2rem'}}>🔔</span>
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span style={{ 
+                    position: 'absolute', top: '-5px', right: '-8px', 
+                    background: 'red', color: 'white', borderRadius: '50%', 
+                    padding: '0.1rem 0.35rem', fontSize: '0.65rem', fontWeight: 'bold' 
+                  }}>
+                    {notifications.filter(n => !n.read).length}
+                  </span>
+                )}
+              </div>
+
+              {showNotifications && (
+                <div style={{
+                  position: 'absolute', top: '55px', right: '0', background: 'white', 
+                  borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', 
+                  width: '300px', zIndex: 100, padding: '1rem'
+                }}>
+                  <h4 style={{ margin: 0, marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', color: 'var(--text-primary)' }}>Notifications</h4>
+                  {notifications.length === 0 ? (
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No new notifications.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {notifications.map(n => (
+                        <div key={n.id} style={{ 
+                          padding: '0.75rem', background: n.read ? 'transparent' : 'rgba(30, 109, 94, 0.05)', 
+                          borderRadius: '8px', fontSize: '0.85rem', cursor: 'pointer',
+                          color: 'var(--text-primary)'
+                        }} onClick={() => {
+                          setNotifications(notifications.map(xn => xn.id === n.id ? {...xn, read: true} : xn));
+                        }}>
+                          {n.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div style={{textAlign: 'right'}}>
                 <div style={{fontWeight: '600'}}>{currentUser.name}</div>
                 <div className="role">Customer</div>
@@ -138,12 +212,12 @@ function App() {
                     <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>Available Services</h2>
                     <button className="btn" onClick={handleCustomJobRequest} title="Submit a request for a custom service not listed here">+ Request Custom Job</button>
                   </div>
-                  <CategoryGrid onCategoryClick={handleCategoryClick} />
+                  <CategoryGrid onCategoryClick={handleCategoryClick} searchTerm={searchTerm} />
                 </>
               )}
 
               {activeTab === 'History' && <HistoryTab currentUser={currentUser} />}
-              {activeTab === 'Profile' && <ProfileTab userProfile={currentUser} />}
+              {activeTab === 'Profile' && <ProfileTab userProfile={currentUser} onUpdateUser={setCurrentUser} />}
 
             </div>
           </div>

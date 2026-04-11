@@ -9,14 +9,23 @@ const categories = [
   { id: 6, name: 'Appliance Repair', icon: '🧊', desc: 'Refrigerators & AC', bg: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1000&h=800&fit=crop' },
 ];
 
-const CategoryGrid = ({ onCategoryClick }) => {
+const CategoryGrid = ({ onCategoryClick, searchTerm = '' }) => {
+  const filteredCategories = categories.filter(cat => 
+    cat.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    cat.desc.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (filteredCategories.length === 0) {
+    return <div style={{ color: 'var(--text-secondary)' }}>No services found matching "{searchTerm}"</div>;
+  }
+
   return (
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
       gap: '1.5rem'
     }}>
-      {categories.map((cat, idx) => (
+      {filteredCategories.map((cat, idx) => (
         <div key={cat.id} 
           className={`animate-up delay-${Math.min(idx, 3)}`} 
           onClick={() => onCategoryClick(cat)}
