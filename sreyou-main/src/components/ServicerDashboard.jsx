@@ -151,19 +151,19 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
             {availableJobs.map(job => (
-              <div key={job.id} className="glass-panel animate-up" style={{ padding: '1.5rem', border: '1px solid var(--glass-border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{job.category}</h3>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--primary)' }}>{job.title || job.category}</h3>
                   {job.distance_km && (
                     <span style={{ background: 'rgba(30,109,94,0.1)', color: 'var(--primary)', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
                        {job.distance_km} km away
                     </span>
                   )}
                 </div>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: '600' }}>Category: {job.category}</p>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Requested by {job.customer_name}</p>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{job.description || 'No description provided.'}</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: '600', color: 'var(--primary)' }}>Pending</span>
+                  <span style={{ fontWeight: '600', color: 'var(--primary)', fontSize: '0.85rem' }}>Open Request</span>
                   <button className="btn" style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }} onClick={() => handleAcceptJob(job.id)} title={`Accept this ${job.category} job request from ${job.customer_name}`}>Accept Job</button>
                 </div>
               </div>
@@ -182,7 +182,8 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
             {myJobs.map(job => (
                <div key={job.id} className="glass-panel animate-up" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div style={{ flex: '1 1 200px' }}>
-                    <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{job.category}</h3>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem', color: 'var(--primary)' }}>{job.title || job.category}</h3>
+                    <p style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem' }}>📍 {job.address}</p>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Customer: {job.customer_name}</p>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{job.description}</p>
                   </div>

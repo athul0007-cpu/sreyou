@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const JobRequestModal = ({ category, onClose, onSubmit }) => {
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
 
@@ -62,9 +63,35 @@ const JobRequestModal = ({ category, onClose, onSubmit }) => {
 
         <form onSubmit={(e) => {
           e.preventDefault();
-          if(description && address) onSubmit({ description, address });
+          if(title && description && address) onSubmit({ title, description, address });
         }}>
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.9rem' }}>
+              Job Name / Title
+            </label>
+            <input 
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Fixing Leaky Kitchen Sink"
+              required
+              style={{
+                width: '100%',
+                padding: '0.8rem',
+                borderRadius: '8px',
+                background: 'rgba(0, 0, 0, 0.03)',
+                border: '1px solid rgba(0,0,0,0.1)',
+                color: 'var(--text-primary)',
+                fontSize: '1rem',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'}
+            />
+          </div>
+
+          <div style={{ marginBottom: '1.25rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.95rem' }}>
               Describe the Job
             </label>
