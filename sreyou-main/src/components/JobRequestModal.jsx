@@ -16,11 +16,13 @@ const JobRequestModal = ({ category, onClose, onSubmit }) => {
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000,
-      padding: '1rem'
+      padding: '0.5rem'
     }}>
       <div className="glass-panel animate-up" style={{
         width: '100%',
         maxWidth: '500px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
         position: 'relative',
         background: 'rgba(255, 255, 255, 0.95)',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',

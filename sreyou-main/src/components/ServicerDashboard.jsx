@@ -114,34 +114,34 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
   };
 
   return (
-    <div className="dashboard-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header className="top-header" style={{ display: 'flex', justifyContent: 'space-between', padding: '1.5rem', background: 'rgba(255,255,255,0.8)', borderBottom: '1px solid var(--glass-border)' }}>
+    <div className="dashboard-container servicer-view" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <header className="top-header">
         <div className="brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0}}>
           <span style={{ fontSize: '1.4rem', fontWeight: '800', lineHeight: 1, color: 'var(--primary)' }}>SreYou</span>
           <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Servicer Portal</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ textAlign: 'right' }}>
-            <span style={{ fontWeight: '600', display: 'block' }}>{currentUser.name}</span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>⭐ {avgRating}</span>
+            <span style={{ fontWeight: '600', display: 'block', fontSize: '0.9rem' }}>{currentUser.name}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>⭐ {avgRating}</span>
           </div>
-          <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }} onClick={onLogout} title="Sign out of your servicer account">Logout</button>
+          <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={onLogout} title="Sign out of your servicer account">Logout</button>
         </div>
       </header>
 
-      <main style={{ padding: '2rem', flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '2rem', margin: 0 }}>Available Job Requests</h2>
-          <button className="btn btn-secondary" onClick={() => setShowMap(!showMap)}>
-            {showMap ? 'Hide Map' : 'Show Map View'}
+      <main className="view-container" style={{ flex: 1, padding: '1.5rem', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, color: 'var(--primary)' }}>Available Jobs</h2>
+          <button className="btn" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => setShowMap(!showMap)}>
+            {showMap ? 'Hide Map' : 'Show Map'}
           </button>
         </div>
         
         {showMap && (
-           <div className="glass-panel" style={{ height: '400px', marginBottom: '2rem', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+           <div className="glass-panel" style={{ height: '300px', marginBottom: '2rem', overflow: 'hidden', padding: 0, border: '1px solid var(--glass-border)' }}>
               <div ref={mapRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} />
               <style>{`
-                .leaflet-container { height: 100%; border-radius: 12px; }
+                .leaflet-container { height: 100%; width: 100%; border-radius: 12px; }
               `}</style>
            </div>
         )}
@@ -149,7 +149,7 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
         {availableJobs.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>No jobs currently available nearby.</p>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
             {availableJobs.map(job => (
               <div key={job.id} className="glass-panel animate-up" style={{ padding: '1.5rem', border: '1px solid var(--glass-border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
@@ -178,19 +178,20 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
             You have no active jobs right now.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {myJobs.map(job => (
-               <div key={job.id} className="glass-panel animate-up" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{job.category} - {job.customer_name}</h3>
-                    <p style={{ color: 'var(--text-secondary)' }}>{job.description}</p>
+               <div key={job.id} className="glass-panel animate-up" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{job.category}</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Customer: {job.customer_name}</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{job.description}</p>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                    <div style={{ color: 'var(--primary)', fontWeight: 'bold', textTransform: 'capitalize' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flexShrink: 0 }}>
+                    <div style={{ color: 'var(--primary)', fontWeight: 'bold', textTransform: 'capitalize', fontSize: '0.85rem' }}>
                       {job.status}
                     </div>
                     {job.status === 'accepted' && (
-                      <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => setActiveChatJob(job)}>
+                      <button className="btn" style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }} onClick={() => setActiveChatJob(job)}>
                         Message
                       </button>
                     )}

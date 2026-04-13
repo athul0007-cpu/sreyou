@@ -67,16 +67,27 @@ function App() {
         const res = await fetch(`${API_URL}/api/users/${currentUser.id}/jobs?role=customer`);
         const data = await res.json();
         
-        // Detect state change from pending -> accepted
+        // Detect state changes
         if (lastCheckedJobs.length > 0) {
           data.forEach(job => {
             const previousState = lastCheckedJobs.find(j => String(j.id) === String(job.id));
-            if (previousState && previousState.status === 'pending' && job.status === 'accepted') {
-              setNotifications(prev => [{
-                id: Date.now(),
-                message: `${job.servicer_name} accepted your ${job.category} request!`,
-                read: false
-              }, ...prev]);
+            if (previousState) {
+              // 🟢 Scenario: Job Accepted
+              if (previousState.status === 'pending' && job.status === 'accepted') {
+                setNotifications(prev => [{
+                  id: Date.now(),
+                  message: `🎉 ${job.servicer_name} accepted your ${job.category} request!`,
+                  read: false
+                }, ...prev]);
+              }
+              // 🔴 Scenario: Professional Withdrawal
+              if (previousState.status === 'accepted' && job.status === 'pending') {
+                setNotifications(prev => [{
+                  id: Date.now(),
+                  message: `⚠️ The professional had to withdraw. Your job is back in search. Your funds are secure in escrow 🛡️`,
+                  read: false
+                }, ...prev]);
+              }
             }
           });
         }
@@ -230,7 +241,7 @@ function App() {
 
             <div className="user-profile" style={{ position: 'relative' }}>
               <div 
-                style={{ position: 'relative', cursor: 'pointer', marginRight: '1rem' }} 
+                style={{ position: 'relative', cursor: 'pointer', marginRight: '0.5rem' }} 
                 onClick={() => setShowNotifications(!showNotifications)}
               >
                 <span style={{fontSize: '1.2rem'}}>🔔</span>
@@ -271,19 +282,19 @@ function App() {
                   )}
                 </div>
               )}
-              <div style={{textAlign: 'right'}}>
+              <div className="name-label" style={{textAlign: 'right'}}>
                 <div style={{fontWeight: '600'}}>{currentUser.name}</div>
                 <div className="role">Customer</div>
               </div>
               <div style={{
-                width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+                width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0
               }}>
                 {currentUser.name.charAt(0)}
               </div>
             </div>
           </header>
 
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '2rem' }}>
+          <div className="content-container" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             
             {/* Navigational Tabs */}
             <div className="tabs">
@@ -293,13 +304,13 @@ function App() {
             </div>
 
             {/* View Routing Engine */}
-            <div style={{ padding: '2rem' }}>
+            <div className="view-container" style={{ flex: 1, padding: '1.5rem', overflowY: 'auto' }}>
               
               {activeTab === 'Services' && (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>Available Services</h2>
-                    <button className="btn" onClick={handleCustomJobRequest} title="Submit a request for a custom service not listed here">+ Request Custom Job</button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)' }}>Available Services</h2>
+                    <button className="btn" onClick={handleCustomJobRequest} style={{ fontSize: '0.9rem', padding: '0.6rem 1rem' }} title="Submit a request for a custom service not listed here">+ Custom Job</button>
                   </div>
                   <CategoryGrid onCategoryClick={handleCategoryClick} searchTerm={searchTerm} />
                 </>

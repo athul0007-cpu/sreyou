@@ -47,6 +47,30 @@ const JobChat = ({ job, currentUser, onClose }) => {
     } catch (err) {}
   };
 
+  const handleReject = async () => {
+    const isPaid = job.payment_status === 'in_escrow';
+    const warning = isPaid 
+      ? "This job is already paid. Withdrawing will keep the funds in escrow for the next worker, but may affect your professional rating. Continue?"
+      : "Are you sure you want to withdraw from this job? It will be made available to other professionals.";
+    
+    if (!window.confirm(warning)) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/jobs/${job.id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        onClose();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to withdraw");
+      }
+    } catch (err) {
+      alert("Network error. Please try again.");
+    }
+  };
+
   return (
     <div style={{
       position: 'fixed',
@@ -63,9 +87,32 @@ const JobChat = ({ job, currentUser, onClose }) => {
       <div style={{ background: 'var(--primary)', color: 'white', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{currentUser.role === 'customer' ? job.servicer_name : job.customer_name}</h4>
-          <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{job.category} Job Request</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{job.category} Job Request</span>
+            {job.payment_status === 'in_escrow' && (
+              <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px' }}>🛡️ Paid</span>
+            )}
+          </div>
         </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {currentUser.role === 'servicer' && (
+            <button 
+              onClick={handleReject}
+              style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                border: '1px solid rgba(255,255,255,0.3)', 
+                color: 'white', 
+                fontSize: '0.75rem', 
+                padding: '4px 8px', 
+                borderRadius: '4px', 
+                cursor: 'pointer' 
+              }}
+            >
+              Withdraw
+            </button>
+          )}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+        </div>
       </div>
 
       {/* Messages View */}
