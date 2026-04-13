@@ -53,8 +53,8 @@ app.get('/api/users/:id', async (req, res) => {
 
 // Broadcast (create) a job
 app.post('/api/jobs', async (req, res) => {
-  const { customer_id, customer_name, category, description, lat, lng } = req.body;
-  if (!customer_id || !category) return res.status(400).json({ error: 'Missing required fields' });
+  const { customer_id, customer_name, category, title, description, address, lat, lng } = req.body;
+  if (!customer_id || !category || !title) return res.status(400).json({ error: 'Missing required fields' });
 
   const distance_km = parseFloat((Math.random() * 11.5 + 0.5).toFixed(1));
 
@@ -63,7 +63,9 @@ app.post('/api/jobs', async (req, res) => {
       customer_id: String(customer_id),
       customer_name,
       category,
+      title,
       description: description || '',
+      address: address || '',
       status: 'pending',
       payment_status: 'unpaid',
       escrow_amount: 0,
@@ -79,10 +81,14 @@ app.post('/api/jobs', async (req, res) => {
   }
 });
 
-// Get all pending jobs
+// Get all pending jobs (Public view - Hides full address for privacy)
 app.get('/api/jobs/available', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('jobs').select('*').eq('status', 'pending').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('jobs')
+      .select('id, category, title, description, customer_name, distance_km, lat, lng, created_at')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    
     if (error) throw error;
     res.json(data);
   } catch (err) {

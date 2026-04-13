@@ -72,10 +72,11 @@ export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
               flexWrap: 'wrap', gap: '1rem'
             }}>
               <div style={{ flex: '1 1 200px' }}>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>{job.category}</h4>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                  {new Date(job.created_at).toLocaleDateString()} 
-                  {job.servicer_name ? ` • With ${job.servicer_name}` : ' • Search pending'}
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>{job.title || job.category}</h4>
+                <div style={{ color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '600', marginTop: '0.25rem' }}>📍 {job.address}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                  {job.category} • {new Date(job.created_at).toLocaleDateString()} 
+                  {job.servicer_name ? ` • Assigned to ${job.servicer_name}` : ' • Search pending'}
                 </div>
               </div>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flexShrink: 0, marginLeft: 'auto' }}>
