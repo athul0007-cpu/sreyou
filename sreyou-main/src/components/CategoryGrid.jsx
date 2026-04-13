@@ -22,8 +22,8 @@ const CategoryGrid = ({ onCategoryClick, searchTerm = '' }) => {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-      gap: '1.5rem'
+      gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+      gap: '1rem'
     }}>
       {filteredCategories.map((cat, idx) => (
         <div key={cat.id} 
@@ -42,7 +42,7 @@ const CategoryGrid = ({ onCategoryClick, searchTerm = '' }) => {
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             backgroundColor: 'rgba(30, 109, 94, 0.1)', // fallback color
-            height: '160px',
+            height: '140px',
             borderRadius: '12px',
             boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
             marginBottom: '0.75rem',

@@ -65,6 +65,8 @@ app.post('/api/jobs', async (req, res) => {
       category,
       description: description || '',
       status: 'pending',
+      payment_status: 'unpaid',
+      escrow_amount: 0,
       distance_km,
       lat: lat || null,
       lng: lng || null
@@ -150,9 +152,59 @@ app.put('/api/users/:id', async (req, res) => {
 app.delete('/api/jobs/:id', async (req, res) => {
   const jobId = req.params.id;
   try {
+    const { data: job } = await supabase.from('jobs').select('payment_status').eq('id', jobId).single();
+    
+    if (job && job.payment_status === 'in_escrow') {
+      return res.status(400).json({ error: 'Cannot delete a paid job. Please use the refund endpoint instead.' });
+    }
+
     const { error } = await supabase.from('jobs').delete().eq('id', jobId).eq('status', 'pending');
     if (error) throw error;
     res.json({ message: 'Job cancelled' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Reject a job (Soft Reset by worker)
+app.post('/api/jobs/:id/reject', async (req, res) => {
+  const jobId = req.params.id;
+  try {
+    const { data, error } = await supabase.from('jobs')
+      .update({ 
+        status: 'pending', 
+        servicer_id: null, 
+        servicer_name: null, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', jobId)
+      .eq('status', 'accepted')
+      .select().single();
+
+    if (!data || error) return res.status(404).json({ error: 'Job not found or not in accepted state' });
+    
+    res.json({ message: 'Job reset to pending. Payment stays in escrow if applicable.', job: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Refund a job
+app.post('/api/jobs/:id/refund', async (req, res) => {
+  const jobId = req.params.id;
+  try {
+    const { data: job } = await supabase.from('jobs').select('*').eq('id', jobId).single();
+    
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.payment_status !== 'in_escrow') return res.status(400).json({ error: 'No escrow payment found to refund' });
+
+    // Simulated Refund Logic
+    const { error } = await supabase.from('jobs')
+      .update({ payment_status: 'refunded', status: 'cancelled' })
+      .eq('id', jobId);
+
+    if (error) throw error;
+    res.json({ message: 'Refund processed successfully and job cancelled.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

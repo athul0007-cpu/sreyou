@@ -127,12 +127,12 @@ const MatchingScreen = ({ category, onMatchFound, onCancel, location }) => {
         textAlign: 'center',
         background: 'rgba(11, 14, 20, 0.85)',
         backdropFilter: 'blur(12px)',
-        padding: '2.5rem',
-        borderRadius: '32px',
+        padding: '1.5rem',
+        borderRadius: '24px',
         border: '1px solid rgba(255,255,255,0.1)',
         boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
-        width: '90%',
-        maxWidth: '400px',
+        width: '85%',
+        maxWidth: '380px',
         pointerEvents: 'auto'
       }}>
         <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: 'white', fontWeight: '800' }}>

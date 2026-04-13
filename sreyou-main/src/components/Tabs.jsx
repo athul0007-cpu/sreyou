@@ -33,14 +33,24 @@ export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
     }
   };
 
-  const handleCancel = async (jobId) => {
+  const handleCancel = async (job) => {
     try {
-      if (confirm('Cancel this service request?')) {
-        await fetch(`${API_URL}/api/jobs/${jobId}`, { method: 'DELETE' });
-        setHistory(history.filter(h => h.id !== jobId));
+      const isPaid = job.payment_status === 'in_escrow';
+      const warning = isPaid 
+        ? 'This job is already paid. Cancelling will trigger a full refund to your original payment method. Continue?'
+        : 'Cancel this service request?';
+      
+      if (confirm(warning)) {
+        if (isPaid) {
+          await fetch(`${API_URL}/api/jobs/${job.id}/refund`, { method: 'POST' });
+        } else {
+          await fetch(`${API_URL}/api/jobs/${job.id}`, { method: 'DELETE' });
+        }
+        setHistory(history.filter(h => h.id !== job.id));
       }
     } catch (err) {
       console.error('Failed to cancel job', err);
+      alert("Error cancelling job. Please try again.");
     }
   };
 
@@ -57,32 +67,43 @@ export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
           {history.map(job => (
             <div key={job.id} style={{ 
               display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-              padding: '1.5rem', background: 'rgba(255,255,255,0.5)', 
-              borderRadius: '12px', border: '1px solid var(--glass-border)' 
+              padding: '1.25rem', background: 'rgba(255,255,255,0.5)', 
+              borderRadius: '12px', border: '1px solid var(--glass-border)',
+              flexWrap: 'wrap', gap: '1rem'
             }}>
-              <div>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: '600' }}>{job.category}</h4>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              <div style={{ flex: '1 1 200px' }}>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>{job.category}</h4>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
                   {new Date(job.created_at).toLocaleDateString()} 
-                  {job.servicer_name ? ` • Assigned to ${job.servicer_name}` : ' • Waiting for Professional'}
+                  {job.servicer_name ? ` • With ${job.servicer_name}` : ' • Search pending'}
                 </div>
               </div>
-              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                <div style={{ color: job.status === 'accepted' ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '600', textTransform: 'capitalize' }}>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flexShrink: 0, marginLeft: 'auto' }}>
+                <div style={{ 
+                  color: job.status === 'accepted' ? 'var(--primary)' : 'var(--text-secondary)', 
+                  fontSize: '0.9rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px'
+                }}>
                   {job.status}
                 </div>
                 {job.status === 'pending' && (
-                  <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleCancel(job.id)}>
-                    Cancel
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    {job.payment_status === 'in_escrow' && (
+                      <span style={{ fontSize: '0.7rem', color: 'var(--primary)', background: 'rgba(30, 109, 94, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
+                        🛡️ ESCROWED
+                      </span>
+                    )}
+                    <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleCancel(job)}>
+                      Cancel
+                    </button>
+                  </div>
                 )}
                 {job.status === 'accepted' && (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => setActiveChatJob(job)}>
                       Message
                     </button>
                     <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => { setRatingJob(job); setRatingVal(5); setReviewComment(''); }}>
-                      Mark Completed
+                      Complete
                     </button>
                   </div>
                 )}
@@ -154,55 +175,56 @@ export const ProfileTab = ({ userProfile, onUpdateUser }) => {
   };
 
   return (
-    <div className="glass-panel animate-up" style={{ padding: '2rem', display: 'flex', gap: '3rem' }}>
-      <div style={{ width: '250px', textAlign: 'center' }}>
+    <div className="glass-panel animate-up" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '2rem' }}>
+      <div style={{ flex: '1 1 200px', textAlign: 'center', maxWidth: '300px', margin: '0 auto' }}>
         <div 
           style={{ 
-            width: '150px', height: '150px', borderRadius: '50%', marginBottom: '1rem', 
-            backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', margin: '0 auto 1rem' 
+            width: '120px', height: '120px', borderRadius: '50%', marginBottom: '1rem', 
+            backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', margin: '0 auto 1rem',
+            boxShadow: 'var(--glass-shadow)'
           }}
         >
           {userProfile?.name?.charAt(0) || 'U'}
         </div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>{userProfile?.name || 'Customer'}</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>Customer Account</p>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--primary)' }}>{userProfile?.name || 'Customer'}</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Platinum Member</p>
         
-        <button className="btn btn-secondary" style={{ marginTop: '1.5rem', width: '100%', justifyContent: 'center' }} onClick={() => setIsEditing(!isEditing)} title="Update your account information">
-          {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+        <button className="btn" style={{ marginTop: '1.5rem', width: '100%', padding: '0.6rem' }} onClick={() => setIsEditing(!isEditing)} title="Update your account information">
+          {isEditing ? 'Cancel' : 'Edit Profile'}
         </button>
       </div>
       
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: '1 1 300px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
-          <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Account Details</h3>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: 'var(--text-secondary)' }}>Security & Identity</h3>
           {isEditing && (
-            <button className="btn" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }} onClick={handleSave}>Save Changes</button>
+            <button className="btn" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }} onClick={handleSave}>Save</button>
           )}
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
           <div>
-            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Email Address</label>
+            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Email Address</label>
             {isEditing ? (
-              <input type="email" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="example@email.com" />
+              <input type="email" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'white' }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="example@email.com" />
             ) : (
-              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>{userProfile?.email || 'Not configured'}</div>
+              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.email || 'Not shared'}</div>
             )}
           </div>
           <div>
-            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Phone Number</label>
+            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Phone Number</label>
             {isEditing ? (
-              <input type="tel" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="(555) 000-0000" />
+              <input type="tel" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'white' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="(555) 000-0000" />
             ) : (
-              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>{userProfile?.phone || 'Not configured'}</div>
+              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.phone || 'Not shared'}</div>
             )}
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Default Saved Location</label>
+            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Primary Service Location</label>
             {isEditing ? (
-              <input type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="123 Main St, City" />
+              <input type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'white' }} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="123 Main St, City" />
             ) : (
-              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>{userProfile?.location || 'Not configured'}</div>
+              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.location || 'Detecting...'}</div>
             )}
           </div>
         </div>

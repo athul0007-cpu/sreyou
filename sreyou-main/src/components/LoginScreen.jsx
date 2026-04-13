@@ -72,7 +72,7 @@ const LoginScreen = ({ onLogin }) => {
   return (
     <div className="app-wrapper" style={{ justifyContent: 'center', alignItems: 'center' }}>
       <div className="glass-panel animate-up" style={{
-        maxWidth: '450px', width: '100%', padding: '3rem 2rem', textAlign: 'center'
+        maxWidth: '450px', width: '90%', textAlign: 'center'
       }}>
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', lineHeight: 1, color: 'var(--primary)' }}>SreYou</h1>
