@@ -13,6 +13,10 @@
   --modal-bg: rgba(255, 255, 255, 0.95);
   --modal-overlay: rgba(255, 255, 255, 0.3);
   --input-bg: rgba(0, 0, 0, 0.03);
+  --search-bg: rgba(255, 255, 255, 0.6);
+  --search-focus-bg: #fff;
+  --sidebar-bg: var(--primary);
+  --overlay-opacity: 0.4;
   --border-radius-lg: 24px;
   --border-radius-md: 16px;
   --border-radius-sm: 8px;
@@ -27,13 +31,17 @@
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-light: #64748b;
-  --bg-color: #050505;
-  --glass-bg: rgba(15, 23, 42, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-  --modal-bg: #111827;
-  --modal-overlay: rgba(0, 0, 0, 0.6);
+  --bg-color: #000000;
+  --glass-bg: rgba(10, 10, 10, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 1);
+  --modal-bg: #050505;
+  --modal-overlay: rgba(0, 0, 0, 0.85);
   --input-bg: rgba(255, 255, 255, 0.05);
+  --search-bg: #0a0a0a;
+  --search-focus-bg: #000;
+  --sidebar-bg: #000;
+  --overlay-opacity: 0.8;
 }
 
 * {
@@ -60,15 +68,16 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0);
+  background: rgba(0, 0, 0, var(--overlay-opacity));
   transition: background 0.4s ease;
   z-index: -1;
   pointer-events: none;
 }
 
-[data-theme='dark']::before {
-  background: rgba(15, 23, 42, 0.75); /* Dark overlay for dark mode */
+[data-theme='dark'] body::before {
+  --overlay-opacity: 0.75;
 }
+
 
 /* Base App Wrapper structure simulating the dashboard */
 .app-wrapper {
@@ -119,7 +128,7 @@ body::before {
 /* Sidebar / Bottom Navigation */
 .sidebar {
   width: 80px;
-  background: var(--primary);
+  background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -230,7 +239,7 @@ body, .dashboard-container, .glass-panel, .main-area, .top-header, .sidebar, .ta
 .search-bar {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--search-bg);
   border-radius: 100px;
   padding: 0.5rem 1rem;
   width: 100%;
@@ -240,8 +249,8 @@ body, .dashboard-container, .glass-panel, .main-area, .top-header, .sidebar, .ta
 }
 
 .search-bar:focus-within {
-  background: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: var(--search-focus-bg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   border-color: var(--primary);
 }
 
