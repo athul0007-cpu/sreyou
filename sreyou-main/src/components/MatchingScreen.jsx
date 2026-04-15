@@ -167,7 +167,7 @@ const MatchingScreen = ({ category, onMatchFound, onCancel, location, theme }) =
           onClick={onCancel}
           style={{
             background: 'transparent',
-            border: '2px solid rgba(239, 68, 68, 0.5)',
+            border: '2px solid var(--glass-border)',
             color: '#ef4444',
             padding: '1rem 2rem',
             borderRadius: '12px',
@@ -195,7 +195,7 @@ const MatchingScreen = ({ category, onMatchFound, onCancel, location, theme }) =
         .user-marker-dot {
           width: 40px; height: 40px;
           background: var(--primary);
-          border: 3px solid white;
+          border: 3px solid var(--glass-border);
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           font-size: 1.5rem;

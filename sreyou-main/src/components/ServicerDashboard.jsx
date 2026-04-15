@@ -219,7 +219,7 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
           width: 20px;
           height: 20px;
           background: #f59e0b;
-          border: 2px solid white;
+          border: 2px solid rgba(239, 68, 68, 0.5);
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
