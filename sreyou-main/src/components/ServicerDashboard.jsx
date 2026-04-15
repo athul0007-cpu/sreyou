@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { API_URL } from '../config';
 import JobChat from './JobChat';
+import ThemeToggle from './ThemeToggle';
 
-const ServicerDashboard = ({ currentUser, onLogout }) => {
+const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
   const [availableJobs, setAvailableJobs] = useState([]);
   const [myJobs, setMyJobs] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -52,7 +53,11 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
       attributionControl: false
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    const tileUrl = theme === 'dark' 
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    L.tileLayer(tileUrl, {
       maxZoom: 20
     }).addTo(map);
 
@@ -65,7 +70,7 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
         mapInstance.current = null;
       }
     };
-  }, [showMap]);
+  }, [showMap, theme]);
 
   // Update markers when availableJobs change
   useEffect(() => {
@@ -125,6 +130,7 @@ const ServicerDashboard = ({ currentUser, onLogout }) => {
             <span style={{ fontWeight: '600', display: 'block', fontSize: '0.9rem' }}>{currentUser.name}</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>⭐ {avgRating}</span>
           </div>
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
           <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={onLogout} title="Sign out of your servicer account">Logout</button>
         </div>
       </header>

@@ -76,9 +76,10 @@ const JobChat = ({ job, currentUser, onClose }) => {
       position: 'fixed',
       bottom: '20px', right: '20px',
       width: '350px', height: '500px',
-      background: 'white',
+      background: 'var(--bg-color)',
       borderRadius: '16px',
-      boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+      boxShadow: 'var(--glass-shadow)',
+      border: '1px solid var(--glass-border)',
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden',
       zIndex: 4000
@@ -116,7 +117,7 @@ const JobChat = ({ job, currentUser, onClose }) => {
       </div>
 
       {/* Messages View */}
-      <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', background: '#f5f7fa', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', background: 'var(--bg-color)', display: 'flex', flexDirection: 'column', gap: '0.5rem', opacity: 0.95 }}>
         {messages.length === 0 ? (
           <div style={{ margin: 'auto', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Send a message to get started!</div>
         ) : (
@@ -128,11 +129,12 @@ const JobChat = ({ job, currentUser, onClose }) => {
                   {m.senderName}
                 </div>
                 <div style={{
-                  background: isMe ? 'var(--primary)' : 'white',
+                  background: isMe ? 'var(--primary)' : 'var(--glass-bg)',
                   color: isMe ? 'white' : 'var(--text-primary)',
                   padding: '0.6rem 1rem',
                   borderRadius: isMe ? '16px 16px 0 16px' : '16px 16px 16px 0',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                  boxShadow: 'var(--glass-shadow)',
+                  border: isMe ? 'none' : '1px solid var(--glass-border)',
                   fontSize: '0.95rem'
                 }}>
                   {m.text}
@@ -145,13 +147,13 @@ const JobChat = ({ job, currentUser, onClose }) => {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} style={{ display: 'flex', borderTop: '1px solid #eee', background: 'white' }}>
+      <form onSubmit={handleSend} style={{ display: 'flex', borderTop: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
         <input 
           type="text" 
           value={text} 
           onChange={e => setText(e.target.value)} 
           placeholder="Type a message..."
-          style={{ flex: 1, border: 'none', padding: '1rem', outline: 'none', fontSize: '0.95rem' }}
+          style={{ flex: 1, border: 'none', padding: '1rem', outline: 'none', fontSize: '0.95rem', background: 'transparent', color: 'var(--text-primary)' }}
         />
         <button type="submit" style={{ background: 'transparent', border: 'none', color: 'var(--primary)', padding: '0 1rem', cursor: 'pointer', fontWeight: 'bold' }}>Send</button>
       </form>
