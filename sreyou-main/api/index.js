@@ -36,6 +36,10 @@ app.post('/api/auth/sync', async (req, res) => {
     if (error) throw error;
     res.status(201).json({ user: newProfile });
   } catch (err) {
+    // 23505 is the PostgreSQL error code for unique violation
+    if (err.code === '23505' || (err.message && err.message.includes('unique constraint'))) {
+      return res.status(400).json({ error: 'This username is already taken. Please choose another one.' });
+    }
     res.status(500).json({ error: err.message });
   }
 });

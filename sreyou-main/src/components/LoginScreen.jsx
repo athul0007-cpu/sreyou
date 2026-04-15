@@ -35,8 +35,19 @@ const LoginScreen = ({ onLogin }) => {
           password,
           options: { data: { full_name: name || username } }
         });
-        if (authErr) throw authErr;
-        authUser = data.user;
+        
+        if (authErr) {
+          // If user exists but sync failed previously, try to sign in
+          if (authErr.message.toLowerCase().includes('already registered')) {
+            const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+            if (signInErr) throw authErr;
+            authUser = signInData.user;
+          } else {
+            throw authErr;
+          }
+        } else {
+          authUser = data.user;
+        }
       } else {
         // 2. Sign in with Supabase Auth
         const { data, error: authErr } = await supabase.auth.signInWithPassword({
