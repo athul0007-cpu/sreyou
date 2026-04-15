@@ -157,6 +157,7 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
             {availableJobs.map(job => (
+              <div key={job.id} className="glass-panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--primary)' }}>{job.title || job.category}</h3>
                   {job.distance_km && (
