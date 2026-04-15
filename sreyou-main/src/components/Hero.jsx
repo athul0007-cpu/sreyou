@@ -5,7 +5,7 @@ const Hero = () => {
     <div className="glass-panel" style={{
       display: 'flex',
       flexDirection: 'column',
-      background: 'rgba(255, 255, 255, 0.85)',
+      background: 'var(--glass-bg)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -40,17 +40,18 @@ const Hero = () => {
             fontWeight: '600'
           }}>🟢 Online Activity</span>
           <span style={{
-            background: 'rgba(0,0,0,0.05)',
+            background: 'var(--input-bg)',
             padding: '5px 10px',
             borderRadius: '6px',
-            fontSize: '0.85rem'
+            fontSize: '0.85rem',
+            color: 'var(--text-secondary)'
           }}>Connections: 192819210</span>
         </div>
 
         <div className="animate-up delay-2" style={{
           display: 'flex',
           gap: '2.5rem',
-          borderTop: '1px solid rgba(0,0,0,0.1)',
+          borderTop: '1px solid var(--glass-border)',
           paddingTop: '1.5rem',
           marginTop: '1.5rem'
         }}>

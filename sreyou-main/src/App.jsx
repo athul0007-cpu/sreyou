@@ -222,7 +222,7 @@ function App() {
         
         {/* Navigation Sidebar */}
         <aside className="sidebar">
-          <div className="sidebar-icon" style={{ background: 'white', color: 'var(--primary)', marginBottom: '1rem'}} onClick={() => setActiveTab('Services')}>
+          <div className="sidebar-icon" style={{ background: 'var(--modal-bg)', color: 'var(--primary)', marginBottom: '1rem'}} onClick={() => setActiveTab('Services')}>
             <span>S</span>
           </div>
           <div className={`sidebar-icon ${activeTab === 'Services' ? 'active' : ''}`} onClick={() => setActiveTab('Services')} title="Services"><span>🛠️</span></div>
@@ -275,12 +275,13 @@ function App() {
               <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 
               {showNotifications && (
-                <div style={{
-                  position: 'absolute', top: '55px', right: '0', background: 'white', 
-                  borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', 
-                  width: '300px', zIndex: 100, padding: '1rem'
+                <div className="glass-panel" style={{
+                  position: 'absolute', top: '55px', right: '0', background: 'var(--modal-bg)', 
+                  width: '300px', zIndex: 100, padding: '1.5rem',
+                  border: '1px solid var(--glass-border)',
+                  boxShadow: var(--glass-shadow)
                 }}>
-                  <h4 style={{ margin: 0, marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', color: 'var(--text-primary)' }}>Notifications</h4>
+                  <h4 style={{ margin: 0, marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', color: 'var(--text-primary)' }}>Notifications</h4>
                   {notifications.length === 0 ? (
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No new notifications.</p>
                   ) : (
@@ -365,7 +366,7 @@ function App() {
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'var(--bg-color)',
+          backgroundColor: 'var(--modal-overlay)',
           backdropFilter: 'blur(10px)',
           display: 'flex',
           alignItems: 'center',
@@ -373,7 +374,7 @@ function App() {
           zIndex: 3000,
           padding: '1rem'
         }}>
-          <div className="glass-panel animate-up" style={{ textAlign: 'center', maxWidth: '400px', width: '100%', background: 'var(--glass-bg)' }}>
+          <div className="glass-panel animate-up" style={{ textAlign: 'center', maxWidth: '400px', width: '100%', background: 'var(--modal-bg)' }}>
             
             <div style={{
               width: '80px', height: '80px',
