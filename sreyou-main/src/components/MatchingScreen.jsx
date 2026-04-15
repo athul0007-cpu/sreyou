@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { API_URL } from '../config';
 
-const MatchingScreen = ({ category, onMatchFound, onCancel, location }) => {
+const MatchingScreen = ({ category, onMatchFound, onCancel, location, theme }) => {
   const [dots, setDots] = useState('');
   const [realProCount, setRealProCount] = useState(0);
   const [visualMarkers, setVisualMarkers] = useState(0);
@@ -38,7 +38,11 @@ const MatchingScreen = ({ category, onMatchFound, onCancel, location }) => {
       attributionControl: false
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    const tileUrl = theme === 'dark' 
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    L.tileLayer(tileUrl, {
       maxZoom: 20
     }).addTo(map);
 
@@ -87,7 +91,7 @@ const MatchingScreen = ({ category, onMatchFound, onCancel, location }) => {
         mapInstance.current = null;
       }
     };
-  }, [location, category]);
+  }, [location, category, theme]);
 
   // 4. Stay on screen longer to feel like a real search
   useEffect(() => {
@@ -101,7 +105,7 @@ const MatchingScreen = ({ category, onMatchFound, onCancel, location }) => {
     <div style={{
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: '#0b0e14',
+      backgroundColor: 'var(--bg-color)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -125,11 +129,11 @@ const MatchingScreen = ({ category, onMatchFound, onCancel, location }) => {
         position: 'relative',
         zIndex: 2010,
         textAlign: 'center',
-        background: 'rgba(11, 14, 20, 0.85)',
+        background: 'var(--glass-bg)',
         backdropFilter: 'blur(12px)',
         padding: '1.5rem',
         borderRadius: '24px',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid var(--glass-border)',
         boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
         width: '85%',
         maxWidth: '380px',

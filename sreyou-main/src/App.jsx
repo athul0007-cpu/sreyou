@@ -9,6 +9,7 @@ import ServicerDashboard from './components/ServicerDashboard'
 import JobChat from './components/JobChat'
 import { supabase } from './supabase'
 import { API_URL } from './config'
+import ThemeToggle from './components/ThemeToggle'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
@@ -24,6 +25,19 @@ function App() {
   
   const [activeTab, setActiveTab] = useState('Services')
   const [isInitializing, setIsInitializing] = useState(true)
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('sreyou-theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  // 0. Theme effect
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('sreyou-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
   
   // 1. Initial hydration and session listener
   useEffect(() => {
@@ -179,7 +193,7 @@ function App() {
 
   if (isInitializing) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-color)' }}>
         <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
           <div className="ping" style={{ width: '40px', height: '40px', background: 'var(--primary)', borderRadius: '50%', margin: '0 auto 1rem' }}></div>
           <p style={{ color: 'var(--text-secondary)' }}>Restoring SreYou session...</p>
@@ -189,7 +203,7 @@ function App() {
   }
 
   if (currentUser === null) {
-    return <LoginScreen onLogin={handleLogin} />
+    return <LoginScreen onLogin={handleLogin} theme={theme} toggleTheme={toggleTheme} />
   }
 
   const handleLogout = async () => {
@@ -198,7 +212,7 @@ function App() {
   };
 
   if (currentUser.role === 'servicer') {
-    return <ServicerDashboard currentUser={currentUser} onLogout={handleLogout} />
+    return <ServicerDashboard currentUser={currentUser} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />
   }
 
   // Customer View
@@ -257,6 +271,8 @@ function App() {
                   </span>
                 )}
               </div>
+
+              <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 
               {showNotifications && (
                 <div style={{
@@ -341,6 +357,7 @@ function App() {
           onMatchFound={handleMatchFound} 
           onCancel={handleCancelRequest}
           location={lastLocation}
+          theme={theme}
         />
       )}
 
@@ -348,7 +365,7 @@ function App() {
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.4)',
+          backgroundColor: 'var(--bg-color)',
           backdropFilter: 'blur(10px)',
           display: 'flex',
           alignItems: 'center',
@@ -356,7 +373,7 @@ function App() {
           zIndex: 3000,
           padding: '1rem'
         }}>
-          <div className="glass-panel animate-up" style={{ textAlign: 'center', maxWidth: '400px', width: '100%', background: 'rgba(255,255,255,0.95)' }}>
+          <div className="glass-panel animate-up" style={{ textAlign: 'center', maxWidth: '400px', width: '100%', background: 'var(--glass-bg)' }}>
             
             <div style={{
               width: '80px', height: '80px',

@@ -67,7 +67,7 @@ export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
           {history.map(job => (
             <div key={job.id} style={{ 
               display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-              padding: '1.25rem', background: 'rgba(255,255,255,0.5)', 
+              padding: '1.25rem', background: 'var(--glass-bg)', 
               borderRadius: '12px', border: '1px solid var(--glass-border)',
               flexWrap: 'wrap', gap: '1rem'
             }}>
@@ -207,25 +207,25 @@ export const ProfileTab = ({ userProfile, onUpdateUser }) => {
           <div>
             <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Email Address</label>
             {isEditing ? (
-              <input type="email" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'white' }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="example@email.com" />
+              <input type="email" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'var(--text-primary)' }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="example@email.com" />
             ) : (
-              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.email || 'Not shared'}</div>
+              <div style={{ background: 'var(--glass-bg)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.email || 'Not shared'}</div>
             )}
           </div>
           <div>
             <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Phone Number</label>
             {isEditing ? (
-              <input type="tel" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'white' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="(555) 000-0000" />
+              <input type="tel" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'var(--text-primary)' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="(555) 000-0000" />
             ) : (
-              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.phone || 'Not shared'}</div>
+              <div style={{ background: 'var(--glass-bg)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.phone || 'Not shared'}</div>
             )}
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Primary Service Location</label>
             {isEditing ? (
-              <input type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'white' }} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="123 Main St, City" />
+              <input type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'var(--text-primary)' }} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="123 Main St, City" />
             ) : (
-              <div style={{ background: 'rgba(255,255,255,0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.location || 'Detecting...'}</div>
+              <div style={{ background: 'var(--glass-bg)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>{userProfile?.location || 'Detecting...'}</div>
             )}
           </div>
         </div>

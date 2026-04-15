@@ -20,6 +20,16 @@
   --small-mobile: 480px;
 }
 
+[data-theme='dark'] {
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-light: #64748b;
+  --bg-color: #0f172a;
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -34,6 +44,24 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.4s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+[data-theme='dark']::before {
+  background: rgba(15, 23, 42, 0.75); /* Dark overlay for dark mode */
 }
 
 /* Base App Wrapper structure simulating the dashboard */
@@ -139,6 +167,11 @@ body {
 
 .sidebar-icon:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* Transitions for theme switching */
+body, .dashboard-container, .glass-panel, .main-area, .top-header, .sidebar, .tab, .btn, .search-bar {
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Main Content Area */
@@ -248,6 +281,18 @@ body {
   .user-profile .role, .user-profile .name-label {
     display: none;
   }
+}
+
+[data-theme='dark'] .search-bar {
+  background: rgba(30, 41, 59, 0.7);
+}
+
+[data-theme='dark'] .search-bar:focus-within {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+[data-theme='dark'] .tab.active {
+  background: rgba(30, 41, 59, 0.8);
 }
 
 /* Glass Card Content */

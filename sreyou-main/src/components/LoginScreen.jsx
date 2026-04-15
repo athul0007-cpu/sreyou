@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { API_URL } from '../config';
 import { supabase } from '../supabase';
+import ThemeToggle from './ThemeToggle';
 
-const LoginScreen = ({ onLogin }) => {
+const LoginScreen = ({ onLogin, theme, toggleTheme }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -81,7 +82,10 @@ const LoginScreen = ({ onLogin }) => {
   };
 
   return (
-    <div className="app-wrapper" style={{ justifyContent: 'center', alignItems: 'center' }}>
+    <div className="app-wrapper" style={{ justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+      </div>
       <div className="glass-panel animate-up" style={{
         maxWidth: '450px', width: '90%', textAlign: 'center'
       }}>
