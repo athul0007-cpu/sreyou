@@ -88,7 +88,7 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
       });
 
       const marker = L.marker([job.lat, job.lng], { icon })
-        .bindPopup(`<strong>${job.category}</strong><br/>${job.customer_name}<br/><button class="map-btn" onclick="document.dispatchEvent(new CustomEvent('acceptJob', {detail: ${job.id}}))">Accept Job</button>`);
+        .bindPopup(`<strong>${job.category}</strong><br/>${job.customer_name}<br/><button class="map-btn" onclick="document.dispatchEvent(new CustomEvent('acceptJob', {detail: '${job.id}'}))">Accept Job</button>`);
       
       markersGroup.current.addLayer(marker);
     });
