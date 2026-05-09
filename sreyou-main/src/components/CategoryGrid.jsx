@@ -64,7 +64,7 @@ const CategoryGrid = ({ onCategoryClick, searchTerm = '' }) => {
               {cat.name} Service Request
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>
-              {cat.desc}.doc
+              {cat.desc}
             </p>
           </div>
 

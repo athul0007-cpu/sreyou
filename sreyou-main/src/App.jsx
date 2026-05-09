@@ -42,11 +42,23 @@ function App() {
   // 1. Initial hydration and session listener
   useEffect(() => {
     const initSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await fetchProfile(session.user.id);
+      try {
+        // Set a safety timeout for session restoration
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Session timeout")), 10000)
+        );
+
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+        
+        if (session) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (err) {
+        console.error("Session initialization failed:", err);
+      } finally {
+        setIsInitializing(false);
       }
-      setIsInitializing(false);
     };
 
     initSession();
@@ -64,7 +76,14 @@ function App() {
 
   const fetchProfile = async (userId) => {
     try {
-      const res = await fetch(`${API_URL}/api/users/${userId}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      const res = await fetch(`${API_URL}/api/users/${userId}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      
       const data = await res.json();
       if (data.user) {
         setCurrentUser(data.user);
@@ -76,18 +95,22 @@ function App() {
   useEffect(() => {
     if (currentUser?.role !== 'customer') return;
     
+    // Use a ref to track previous state without triggering effect re-runs
+    let previousJobs = lastCheckedJobs;
+
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`${API_URL}/api/users/${currentUser.id}/jobs?role=customer`);
+        if (!res.ok) return;
         const data = await res.json();
         
         // Detect state changes
-        if (lastCheckedJobs.length > 0) {
+        if (previousJobs.length > 0) {
           data.forEach(job => {
-            const previousState = lastCheckedJobs.find(j => String(j.id) === String(job.id));
-            if (previousState) {
+            const prevState = previousJobs.find(j => String(j.id) === String(job.id));
+            if (prevState) {
               // 🟢 Scenario: Job Accepted
-              if (previousState.status === 'pending' && job.status === 'accepted') {
+              if (prevState.status === 'pending' && job.status === 'accepted') {
                 setNotifications(prev => [{
                   id: Date.now(),
                   message: `🎉 ${job.servicer_name} accepted your ${job.category} request!`,
@@ -95,7 +118,7 @@ function App() {
                 }, ...prev]);
               }
               // 🔴 Scenario: Professional Withdrawal
-              if (previousState.status === 'accepted' && job.status === 'pending') {
+              if (prevState.status === 'accepted' && job.status === 'pending') {
                 setNotifications(prev => [{
                   id: Date.now(),
                   message: `⚠️ The professional had to withdraw. Your job is back in search. Your funds are secure in escrow 🛡️`,
@@ -106,12 +129,13 @@ function App() {
           });
         }
         
+        previousJobs = data;
         setLastCheckedJobs(data);
       } catch (err) {}
     }, 3000);
     
     return () => clearInterval(interval);
-  }, [currentUser, lastCheckedJobs]);
+  }, [currentUser?.id]); // Only re-run if the user ID changes
 
   const handleLogin = (user) => {
     setCurrentUser(user)
