@@ -303,7 +303,7 @@ function App() {
                   position: 'absolute', top: '55px', right: '0', background: 'var(--modal-bg)', 
                   width: '300px', zIndex: 100, padding: '1.5rem',
                   border: '1px solid var(--glass-border)',
-                  boxShadow: var(--glass-shadow)
+                  boxShadow: 'var(--glass-shadow)'
                 }}>
                   <h4 style={{ margin: 0, marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', color: 'var(--text-primary)' }}>Notifications</h4>
                   {notifications.length === 0 ? (
