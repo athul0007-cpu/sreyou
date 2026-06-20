@@ -7,25 +7,22 @@ app.use(cors());
 app.use(express.json());
 
 // --- SUPABASE CONFIGURATION ---
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://kkeyyjmupssazgterrut.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrZXl5am11cHNzYXpndGVycnV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTg2NTEsImV4cCI6MjA5MTQ5NDY1MX0.N5MKRGSwHe_3qLoQJ0AQ56K7Rbvrk_iAsOZY9Cd4R6I';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Sync user profile from Supabase Auth
-// This ensures that when a user logs in/signs up, we have their role/name in our 'users' table
 app.post('/api/auth/sync', async (req, res) => {
   const { id, username, name, role } = req.body;
   if (!id || !role) return res.status(400).json({ error: 'Missing sync data' });
 
   try {
-    // Check if profile exists
     const { data: profile } = await supabase.from('users').select('*').eq('id', id).single();
     
     if (profile) {
       return res.json({ user: profile });
     }
 
-    // Create new profile linked to Auth ID
     const { data: newProfile, error } = await supabase.from('users').insert([{ 
       id, 
       username, 
@@ -36,7 +33,6 @@ app.post('/api/auth/sync', async (req, res) => {
     if (error) throw error;
     res.status(201).json({ user: newProfile });
   } catch (err) {
-    // 23505 is the PostgreSQL error code for unique violation
     if (err.code === '23505' || (err.message && err.message.includes('unique constraint'))) {
       return res.status(400).json({ error: 'This username is already taken. Please choose another one.' });
     }
@@ -85,7 +81,7 @@ app.post('/api/jobs', async (req, res) => {
   }
 });
 
-// Get all pending jobs (Public view - Hides full address for privacy)
+// Get all pending jobs
 app.get('/api/jobs/available', async (req, res) => {
   try {
     const { data, error } = await supabase.from('jobs')
@@ -176,7 +172,7 @@ app.delete('/api/jobs/:id', async (req, res) => {
   }
 });
 
-// Reject a job (Soft Reset by worker)
+// Reject a job
 app.post('/api/jobs/:id/reject', async (req, res) => {
   const jobId = req.params.id;
   try {
@@ -208,7 +204,6 @@ app.post('/api/jobs/:id/refund', async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.payment_status !== 'in_escrow') return res.status(400).json({ error: 'No escrow payment found to refund' });
 
-    // Simulated Refund Logic
     const { error } = await supabase.from('jobs')
       .update({ payment_status: 'refunded', status: 'cancelled' })
       .eq('id', jobId);
@@ -226,7 +221,6 @@ app.post('/api/jobs/:id/complete', async (req, res) => {
   try {
     const { error } = await supabase.from('jobs').update({ status: 'completed' }).eq('id', jobId);
     if (error) throw error;
-    // Clean up messages for completed jobs
     await supabase.from('messages').delete().eq('job_id', jobId);
     res.json({ message: 'Job completed' });
   } catch (err) {
@@ -295,7 +289,7 @@ app.get('/api/messages/:jobId', async (req, res) => {
   }
 });
 
-// Count total available professionals (for Privacy-Safe Radar)
+// Count total available professionals
 app.get('/api/users/count-servicers', async (req, res) => {
   try {
     const { count, error } = await supabase
