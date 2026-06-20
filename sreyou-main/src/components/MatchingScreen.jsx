@@ -1,3 +1,4 @@
+/* global L */
 import React, { useEffect, useState, useRef } from 'react';
 import { API_URL } from '../config';
 

@@ -1,3 +1,4 @@
+/* global L */
 import React, { useState, useEffect, useRef } from 'react';
 import { API_URL } from '../config';
 import JobChat from './JobChat';
@@ -98,13 +99,6 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
     }
   }, [availableJobs, showMap]);
 
-  // Handle job acceptance from map popup
-  useEffect(() => {
-    const handleMapAccept = (e) => handleAcceptJob(e.detail);
-    document.addEventListener('acceptJob', handleMapAccept);
-    return () => document.removeEventListener('acceptJob', handleMapAccept);
-  }, []);
-
   const handleAcceptJob = async (jobId) => {
     try {
       await fetch(`${API_URL}/api/jobs/${jobId}/accept`, {
@@ -117,6 +111,13 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
       console.error(err);
     }
   };
+
+  // Handle job acceptance from map popup
+  useEffect(() => {
+    const handleMapAccept = (e) => handleAcceptJob(e.detail);
+    document.addEventListener('acceptJob', handleMapAccept);
+    return () => document.removeEventListener('acceptJob', handleMapAccept);
+  }, []);
 
   return (
     <div className="dashboard-container servicer-view" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
