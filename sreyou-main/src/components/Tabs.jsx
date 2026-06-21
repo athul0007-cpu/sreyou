@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
+import { IconPin, IconShield } from './Icons';
 
 // Separate Tab Views to keep App.jsx clean
 
@@ -73,7 +74,7 @@ export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
             }}>
               <div style={{ flex: '1 1 200px' }}>
                 <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>{job.title || job.category}</h4>
-                <div style={{ color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '600', marginTop: '0.25rem' }}>📍 {job.address}</div>
+                <div style={{ color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '600', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><IconPin size={14} /> {job.address}</div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
                   {job.category} • {new Date(job.created_at).toLocaleDateString()} 
                   {job.servicer_name ? ` • Assigned to ${job.servicer_name}` : ' • Search pending'}
@@ -89,8 +90,8 @@ export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
                 {job.status === 'pending' && (
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     {job.payment_status === 'in_escrow' && (
-                      <span style={{ fontSize: '0.7rem', color: 'var(--primary)', background: 'rgba(30, 109, 94, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
-                        🛡️ ESCROWED
+                      <span style={{ fontSize: '0.7rem', color: 'var(--primary)', background: 'rgba(30, 109, 94, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <IconShield size={12} /> ESCROWED
                       </span>
                     )}
                     <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleCancel(job)}>

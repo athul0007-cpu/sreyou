@@ -1,4 +1,5 @@
 import React from 'react';
+import { getCategoryIcon } from './Icons';
 
 const categories = [
   { id: 1, name: 'Electrician', icon: '⚡', desc: 'Wiring & fixtures', bg: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=1000&h=800&fit=crop' },
@@ -48,15 +49,19 @@ const CategoryGrid = ({ onCategoryClick, searchTerm = '' }) => {
             marginBottom: '0.75rem',
             overflow: 'hidden'
           }}>
-            {/* Checkbox imitation on top left */}
+            {/* Category icon badge */}
             <div style={{
               position: 'absolute',
               top: '8px', left: '8px',
-              width: '16px', height: '16px',
-              background: 'rgba(255,255,255,0.8)',
-              borderRadius: '4px',
-              border: '1px solid rgba(0,0,0,0.2)'
-            }}></div>
+              width: '36px', height: '36px',
+              background: 'rgba(255,255,255,0.9)',
+              borderRadius: '10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--primary)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+            }}>
+              {getCategoryIcon(cat.icon, 20)}
+            </div>
           </div>
           
           <div style={{ padding: '0 0.5rem' }}>

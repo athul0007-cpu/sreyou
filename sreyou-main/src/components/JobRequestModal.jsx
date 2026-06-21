@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getCategoryIcon } from './Icons';
 
 const JobRequestModal = ({ category, onClose, onSubmit }) => {
   const [title, setTitle] = useState('');
@@ -56,7 +57,9 @@ const JobRequestModal = ({ category, onClose, onSubmit }) => {
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ fontSize: '3.5rem', marginBottom: '1rem', marginTop: '1rem' }}>{category.icon}</div>
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(30,109,94,0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1rem auto 1rem' }}>
+            {getCategoryIcon(category.icon, 36) || <span style={{fontSize: '2rem'}}>{category.icon}</span>}
+          </div>
           <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: 'var(--text-primary)', fontWeight: '700' }}>Request a {category.name}</h2>
           <p style={{ color: 'var(--text-secondary)' }}>Describe your issue and we'll match you shortly.</p>
         </div>

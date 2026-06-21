@@ -158,26 +158,44 @@ body::before {
 
 .sidebar-icon {
   width: 48px;
-  height: 48px;
+  height: auto;
+  min-height: 48px;
   border-radius: 12px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   color: white;
   font-size: 1.5rem;
   cursor: pointer;
   transition: var(--transition);
+  gap: 0.15rem;
+  padding: 0.4rem 0;
+}
+
+.sidebar-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 @media (max-width: 768px) {
   .sidebar-icon {
-    width: 60px;
-    height: 60px;
+    width: auto;
+    min-height: auto;
+    padding: 0.35rem 0.5rem;
   }
 }
 
 .sidebar-icon.active {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-icon.active .sidebar-label {
+  opacity: 1;
 }
 
 .sidebar-icon:hover {

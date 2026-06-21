@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { API_URL } from '../config';
 import JobChat from './JobChat';
 import ThemeToggle from './ThemeToggle';
+import { IconStar, IconPin } from './Icons';
 
 const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
   const [availableJobs, setAvailableJobs] = useState([]);
@@ -129,7 +130,7 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ textAlign: 'right' }}>
             <span style={{ fontWeight: '600', display: 'block', fontSize: '0.9rem' }}>{currentUser.name}</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>⭐ {avgRating}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><IconStar size={14} /> {avgRating}</span>
           </div>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
           <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={onLogout} title="Sign out of your servicer account">Logout</button>
@@ -191,7 +192,7 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
                <div key={job.id} className="glass-panel animate-up" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div style={{ flex: '1 1 200px' }}>
                     <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem', color: 'var(--primary)' }}>{job.title || job.category}</h3>
-                    <p style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem' }}>📍 {job.address}</p>
+                    <p style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><IconPin size={14} /> {job.address}</p>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Customer: {job.customer_name}</p>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{job.description}</p>
                   </div>

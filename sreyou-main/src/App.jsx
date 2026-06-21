@@ -10,6 +10,7 @@ import JobChat from './components/JobChat'
 import { supabase } from './supabase'
 import { API_URL } from './config'
 import ThemeToggle from './components/ThemeToggle'
+import { IconServices, IconHistory, IconProfile, IconLogout, IconSearch, IconBell } from './components/Icons'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
@@ -249,11 +250,11 @@ function App() {
           <div className="sidebar-icon" style={{ background: 'var(--modal-bg)', color: 'var(--primary)', marginBottom: '1rem'}} onClick={() => setActiveTab('Services')}>
             <span>S</span>
           </div>
-          <div className={`sidebar-icon ${activeTab === 'Services' ? 'active' : ''}`} onClick={() => setActiveTab('Services')} title="Services"><span>🛠️</span></div>
-          <div className={`sidebar-icon ${activeTab === 'History' ? 'active' : ''}`} onClick={() => setActiveTab('History')} title="History"><span>📅</span></div>
-          <div className={`sidebar-icon ${activeTab === 'Profile' ? 'active' : ''}`} onClick={() => setActiveTab('Profile')} title="Profile"><span>💼</span></div>
+          <div className={`sidebar-icon ${activeTab === 'Services' ? 'active' : ''}`} onClick={() => setActiveTab('Services')} title="Services"><IconServices size={22} /><span className="sidebar-label">Services</span></div>
+          <div className={`sidebar-icon ${activeTab === 'History' ? 'active' : ''}`} onClick={() => setActiveTab('History')} title="History"><IconHistory size={22} /><span className="sidebar-label">History</span></div>
+          <div className={`sidebar-icon ${activeTab === 'Profile' ? 'active' : ''}`} onClick={() => setActiveTab('Profile')} title="Profile"><IconProfile size={22} /><span className="sidebar-label">Profile</span></div>
           
-          <div style={{marginTop: 'auto'}} className="sidebar-icon" onClick={handleLogout} title="Logout"><span>🚪</span></div>
+          <div style={{marginTop: 'auto'}} className="sidebar-icon" onClick={handleLogout} title="Logout"><IconLogout size={22} /><span className="sidebar-label">Logout</span></div>
         </aside>
 
         {/* Main Content Dashboard */}
@@ -276,7 +277,7 @@ function App() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <span style={{ color: 'var(--text-secondary)'}}>🔍</span>
+              <span style={{ color: 'var(--text-secondary)'}}><IconSearch size={18} /></span>
             </div>
 
             <div className="user-profile" style={{ position: 'relative' }}>
@@ -284,7 +285,7 @@ function App() {
                 style={{ position: 'relative', cursor: 'pointer', marginRight: '0.5rem' }} 
                 onClick={() => setShowNotifications(!showNotifications)}
               >
-                <span style={{fontSize: '1.2rem'}}>🔔</span>
+                <span style={{fontSize: '1.2rem'}}><IconBell size={22} /></span>
                 {notifications.filter(n => !n.read).length > 0 && (
                   <span style={{ 
                     position: 'absolute', top: '-5px', right: '-8px', 
