@@ -67,8 +67,7 @@ app.post('/api/jobs', async (req, res) => {
       customer_id: String(customer_id),
       customer_name,
       category,
-      title,
-      description: description || '',
+      description: (title ? title + ' - ' : '') + (description || ''),
       address: address || '',
       status: 'pending',
       payment_status: 'unpaid',
@@ -89,7 +88,7 @@ app.post('/api/jobs', async (req, res) => {
 app.get('/api/jobs/available', async (req, res) => {
   try {
     const { data, error } = await supabase.from('jobs')
-      .select('id, category, title, description, customer_name, distance_km, lat, lng, created_at')
+      .select('id, category, description, customer_name, distance_km, lat, lng, created_at')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
     

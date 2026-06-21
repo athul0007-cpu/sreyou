@@ -20,15 +20,15 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
     try {
       const resA = await fetch(`${API_URL}/api/jobs/available`);
       const dataA = await resA.json();
-      setAvailableJobs(dataA);
+      setAvailableJobs(Array.isArray(dataA) ? dataA : []);
 
       const resM = await fetch(`${API_URL}/api/users/${currentUser.id}/jobs?role=servicer`);
       const dataM = await resM.json();
-      setMyJobs(dataM);
+      setMyJobs(Array.isArray(dataM) ? dataM : []);
 
       const resR = await fetch(`${API_URL}/api/users/${currentUser.id}/reviews`);
       const dataR = await resR.json();
-      setReviews(dataR);
+      setReviews(Array.isArray(dataR) ? dataR : []);
     } catch(err) {
       console.error(err);
     }

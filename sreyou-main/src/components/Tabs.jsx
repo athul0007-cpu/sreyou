@@ -14,7 +14,7 @@ export const HistoryTab = ({ currentUser, setActiveChatJob }) => {
     if (currentUser) {
       fetch(`${API_URL}/api/users/${currentUser.id}/jobs?role=customer`)
         .then(res => res.json())
-        .then(data => setHistory(data))
+        .then(data => setHistory(Array.isArray(data) ? data : []))
         .catch(err => console.error(err));
     }
   }, [currentUser]);
