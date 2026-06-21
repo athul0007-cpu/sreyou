@@ -124,8 +124,7 @@ const ServicerDashboard = ({ currentUser, onLogout, theme, toggleTheme }) => {
     <div className="dashboard-container servicer-view" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header className="top-header">
         <div className="brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0}}>
-          <span style={{ fontSize: '1.4rem', fontWeight: '800', lineHeight: 1, color: 'var(--primary)' }}>SreYou</span>
-          <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Servicer Portal</span>
+          <img src="/logo.jpg" alt="SreYou Logo" style={{ height: '36px', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ textAlign: 'right' }}>

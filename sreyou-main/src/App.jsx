@@ -269,8 +269,7 @@ function App() {
         <main className="main-area">
           <header className="top-header">
             <div className="brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0}}>
-              <span style={{ fontSize: '1.4rem', fontWeight: '800', lineHeight: 1 }}>SreYou</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Service For You</span>
+              <img src="/logo.jpg" alt="SreYou Logo" style={{ height: '36px', objectFit: 'contain' }} />
             </div>
             
             <div className="search-bar">

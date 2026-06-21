@@ -20,6 +20,10 @@ app.post('/api/auth/sync', async (req, res) => {
     const { data: profile } = await supabase.from('users').select('*').eq('id', id).single();
     
     if (profile) {
+      if (req.body.updateRole && profile.role !== req.body.updateRole) {
+        const { data: updated } = await supabase.from('users').update({ role: req.body.updateRole }).eq('id', id).select().single();
+        return res.json({ user: updated || profile });
+      }
       return res.json({ user: profile });
     }
 
