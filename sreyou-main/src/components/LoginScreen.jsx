@@ -91,7 +91,7 @@ const LoginScreen = ({ onLogin, theme, toggleTheme }) => {
         maxWidth: '450px', width: '90%', textAlign: 'center'
       }}>
         <div style={{ marginBottom: '2rem' }}>
-          <img src="/logo.jpg" alt="SreYou Logo" style={{ height: '100px', objectFit: 'contain', marginBottom: '0.5rem' }} />
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '800', lineHeight: 1, color: 'var(--primary)' }}>SreYou</h1>
           <p style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
             Service For You
           </p>
