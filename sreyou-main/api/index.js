@@ -67,11 +67,8 @@ app.post('/api/jobs', async (req, res) => {
       customer_id: String(customer_id),
       customer_name,
       category,
-      description: (title ? title + ' - ' : '') + (description || ''),
-      address: address || '',
+      description: (title ? title + ' - ' : '') + (description || '') + (address ? '\nLocation: ' + address : ''),
       status: 'pending',
-      payment_status: 'unpaid',
-      escrow_amount: 0,
       distance_km,
       lat: lat || null,
       lng: lng || null
@@ -161,12 +158,6 @@ app.put('/api/users/:id', async (req, res) => {
 app.delete('/api/jobs/:id', async (req, res) => {
   const jobId = req.params.id;
   try {
-    const { data: job } = await supabase.from('jobs').select('payment_status').eq('id', jobId).single();
-    
-    if (job && job.payment_status === 'in_escrow') {
-      return res.status(400).json({ error: 'Cannot delete a paid job. Please use the refund endpoint instead.' });
-    }
-
     const { error } = await supabase.from('jobs').delete().eq('id', jobId).eq('status', 'pending');
     if (error) throw error;
     res.json({ message: 'Job cancelled' });
@@ -205,10 +196,9 @@ app.post('/api/jobs/:id/refund', async (req, res) => {
     const { data: job } = await supabase.from('jobs').select('*').eq('id', jobId).single();
     
     if (!job) return res.status(404).json({ error: 'Job not found' });
-    if (job.payment_status !== 'in_escrow') return res.status(400).json({ error: 'No escrow payment found to refund' });
 
     const { error } = await supabase.from('jobs')
-      .update({ payment_status: 'refunded', status: 'cancelled' })
+      .update({ status: 'cancelled' })
       .eq('id', jobId);
 
     if (error) throw error;
