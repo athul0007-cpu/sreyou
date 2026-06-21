@@ -153,8 +153,6 @@ function App() {
   }
 
   const handleJobSubmit = async (details) => {
-    setFlowState('matching')
-    
     // 1. Try to get geolocation
     let lat = null, lng = null;
     try {
@@ -186,9 +184,19 @@ function App() {
       })
       const data = await res.json()
       if (data.id) setActiveJobId(data.id)
+
+      // Add a notification confirming broadcast
+      setNotifications(prev => [{
+        id: Date.now(),
+        message: `Your ${selectedCategory.name} request has been broadcast to nearby professionals. You'll be notified when someone accepts.`,
+        read: false
+      }, ...prev]);
     } catch (err) {
-      console.error('Failed to post job logs', err)
+      console.error('Failed to post job', err)
     }
+
+    // Return to home immediately — polling handles acceptance notifications
+    resetFlow()
   }
 
   const handleMatchFound = (status) => {
